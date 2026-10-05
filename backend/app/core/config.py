@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     ADMIN_BOOTSTRAP_PASSWORD: Optional[str] = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", None)
     OPERATOR_BOOTSTRAP_PASSWORD: Optional[str] = os.getenv("OPERATOR_BOOTSTRAP_PASSWORD", None)
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    APP_ENV: str = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development"))
+    BETA_COHORT_CAP: int = int(os.getenv("BETA_COHORT_CAP", "50"))
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./kalyan_personality.db")

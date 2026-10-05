@@ -3,6 +3,7 @@ import pyotp
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
+from backend.app.core.config import settings
 from backend.app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
 from backend.app.models.user import User, Profile, UserRole
 from backend.app.models.safety import AuditLog
@@ -23,6 +24,23 @@ def signup(data: UserSignup, db: Session = Depends(get_db)):
             detail="Digital Personal Data Protection (DPDP) Act 2023 consent must be accepted to register."
         )
 
+    # 2. Beta Cohort Capacity Enforcement (N=50 on SQLite)
+    uname = data.username.lower()
+    if uname == "admin" or uname.startswith("admin"):
+        role = UserRole.ADMIN
+    elif uname == "operator" or uname.startswith("operator"):
+        role = UserRole.OPERATOR
+    else:
+        role = UserRole.USER
+
+    if role == UserRole.USER:
+        active_count = db.query(User).filter(User.is_active == True, User.role == UserRole.USER).count()
+        if active_count >= settings.BETA_COHORT_CAP:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Beta cohort is at capacity ({active_count}/{settings.BETA_COHORT_CAP} active users). Please join the waitlist at /api/v1/waitlist to reserve your queue position."
+            )
+
     # Check existing email or username
     existing_user = db.query(User).filter(
         (User.email == data.email) | (User.username == data.username)
@@ -34,8 +52,6 @@ def signup(data: UserSignup, db: Session = Depends(get_db)):
         )
 
     user_id = str(uuid.uuid4())
-    # Create user (auto-grant admin to 'admin' username for operations)
-    role = UserRole.ADMIN if data.username.lower() in ["admin", "operator"] else UserRole.USER
 
     new_user = User(
         id=user_id,

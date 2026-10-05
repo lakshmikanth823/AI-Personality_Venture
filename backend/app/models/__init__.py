@@ -7,6 +7,7 @@ from backend.app.models.safety import ModerationResult, AuditLog, KillSwitchStat
 from backend.app.models.analytics import UsageEvent, CostEvent, DailyMetric
 from backend.app.models.experiment import Experiment, ExperimentVariant
 from backend.app.models.subscription import Subscription, PaymentTransaction
+from backend.app.models.waitlist import WaitlistEntry
 
 __all__ = [
     "User", "Profile", "UserRole",
@@ -17,5 +18,6 @@ __all__ = [
     "ModerationResult", "AuditLog", "KillSwitchState",
     "UsageEvent", "CostEvent", "DailyMetric",
     "Experiment", "ExperimentVariant",
-    "Subscription", "PaymentTransaction"
+    "Subscription", "PaymentTransaction",
+    "WaitlistEntry"
 ]

@@ -3,6 +3,7 @@ import random
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from backend.app.models.content import ContentCandidate, Approval, PublishedAction
 import json
 from backend.app.services.safety_engine import SafetyEngine
@@ -130,7 +131,11 @@ class ContentEngine:
             published_at=datetime.now(timezone.utc)
         )
         self.db.add(outbox_entry)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            raise ValueError(f"Candidate {candidate_id} has already been approved or published.")
 
         return {
             "candidate_id": candidate.id,

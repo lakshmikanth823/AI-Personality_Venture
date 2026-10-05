@@ -40,7 +40,12 @@ def approve_candidate(
     db: Session = Depends(get_db)
 ):
     engine = ContentEngine(db)
-    return engine.approve_and_queue(candidate_id, operator_id=current_user.id)
+    try:
+        return engine.approve_and_queue(candidate_id, operator_id=current_user.id)
+    except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e))
 
 @router.post("/candidates/{candidate_id}/reject")
 def reject_candidate(

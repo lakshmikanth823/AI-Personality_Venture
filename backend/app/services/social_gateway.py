@@ -339,3 +339,7 @@ class SocialPublisherService:
 
         return results
 
+
+# Backward compatibility alias
+SocialGateway = SocialPublisherService
+

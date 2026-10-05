@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 from arq.connections import RedisSettings
 from backend.app.core.config import settings
 from backend.app.core.database import SessionLocal
-from backend.app.models.content import OutboxMessage
+from backend.app.models.content import PublishedAction
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +26,18 @@ async def process_outbox_message(ctx: Dict[Any, Any], message_id: str) -> Dict[s
     """
     db = SessionLocal()
     try:
-        msg = db.query(OutboxMessage).filter(OutboxMessage.id == message_id).first()
-        if not msg:
+        action = db.query(PublishedAction).filter(PublishedAction.id == message_id).first()
+        if not action:
             return {"status": "not_found", "message_id": message_id}
         
-        if msg.status == "published":
+        if action.status == "published" or action.status == "success":
             return {"status": "already_published", "message_id": message_id}
         
         # Dispatch logic depending on topic/platform
-        logger.info(f"Processing outbox event {message_id} on topic {msg.topic}")
-        msg.status = "published"
+        logger.info(f"Processing outbox event {message_id} on channel {action.channel}")
+        action.status = "success"
         db.commit()
-        return {"status": "success", "message_id": message_id, "topic": msg.topic}
+        return {"status": "success", "message_id": message_id, "channel": action.channel}
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to process outbox message {message_id}: {e}")

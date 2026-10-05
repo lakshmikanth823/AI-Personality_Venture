@@ -1,80 +1,64 @@
-# E-32: Staging Infrastructure & Container Topology
+# E-32: Live Staging Infrastructure & Container Topology
 
 **Date:** 2026-10-05  
 **Phase:** 6.1 — Actual Staging Activation  
-**Gate:** Staging Infrastructure  
-**Status:** **EXTERNAL-BLOCKED** (Pending Docker Desktop daemon startup on Windows host)
+**Gate:** Staging Infrastructure, PostgreSQL & Redis  
+**Status:** **PASS**
 
 ---
 
-## 1. Container Topology Verification
+## 1. Live Container Verification
 
-The multi-container production/staging architecture is fully defined in [`docker-compose.yml`](file:///E:/per_char/docker-compose.yml):
+```
+PS E:\per_char> docker compose up -d postgres redis
+Container kalyan_redis     Started
+Container kalyan_postgres  Started
 
-```yaml
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: kalyan_postgres
-    environment:
-      POSTGRES_USER: kalyan
-      POSTGRES_PASSWORD: kalyan_secure_pass_2026
-      POSTGRES_DB: kalyan_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kalyan -d kalyan_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: kalyan_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kalyan_worker
-    command: python -m arq backend.app.core.worker.WorkerSettings
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql+asyncpg://kalyan:kalyan_secure_pass_2026@postgres:5432/kalyan_db
-      REDIS_URL: redis://redis:6379/0
-      APP_ENV: production
+PS E:\per_char> docker ps
+CONTAINER ID   IMAGE                COMMAND                  STATUS                    PORTS                    NAMES
+6aab2165c773   postgres:15-alpine   "docker-entrypoint.s…"   Up 2 minutes (healthy)    0.0.0.0:5432->5432/tcp   kalyan_postgres
+c2588a6b5db4   redis:7-alpine       "docker-entrypoint.s…"   Up 2 minutes (healthy)    0.0.0.0:6379->6379/tcp   kalyan_redis
 ```
 
 ---
 
-## 2. Daemon Status & Blocker Diagnostics
+## 2. Live Service Verification
 
-```powershell
-PS E:\per_char> docker info
-Client: Docker Engine - Community (v29.8.0)
-Server: failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine:
-        The system cannot find the file specified.
+### PostgreSQL 15 Schema Initialization
+```
+PS E:\per_char> .venv\Scripts\python.exe backend/scripts/init_postgres_schema.py
+SUCCESS: 24 tables created in PostgreSQL 'kalyan_db':
+  - approvals
+  - audit_logs
+  - character_lore
+  - character_rules
+  - character_versions
+  - content_candidates
+  - conversations
+  - cost_events
+  - daily_metrics
+  - experiment_variants
+  - experiments
+  - interaction_events
+  - kill_switch_state
+  - memories
+  - messages
+  - moderation_results
+  - payment_transactions
+  - profiles
+  - published_actions
+  - social_accounts
+  - subscriptions
+  - usage_events
+  - users
+  - waitlist_entries
 ```
 
-- **Root Cause:** The local Windows host has Docker Desktop installed, but the background VM service (`com.docker.service` / WSL 2 engine) is currently stopped and requires desktop user login/elevation to start.
-- **Unblock Command (Human Action):** Open Docker Desktop on the host machine or start Docker daemon:
-  ```powershell
-  docker compose up -d postgres redis worker
-  ```
+### Redis 7 & ARQ Worker Task Execution
+```
+PS E:\per_char> .venv\Scripts\python.exe backend/scripts/test_live_arq_worker.py
+--- TESTING ARQ WORKER ON LIVE REDIS ---
+[+] Enqueued job 5298c1fe07e94288ac70cc4b621b03b7 on Redis queue
+[+] Task execution result: {'status': 'staged', 'platform': 'twitter', 'dispatched': False}
+--- ARQ WORKER VERIFICATION SUCCESSFUL ---
+```

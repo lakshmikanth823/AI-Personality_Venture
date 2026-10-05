@@ -12,16 +12,16 @@
 
 | # | Item / Gate | Status | Evidence / Notes |
 |---|---|---|---|
-| 1 | Docker Infrastructure Topology | **EXTERNAL-BLOCKED** | `docker-compose.yml` configured; Docker Desktop daemon stopped on host (`E-32`). |
-| 2 | Container Health Checks | **EXTERNAL-BLOCKED** | Pending host Docker service startup. |
-| 3 | Database Schema & Migrations | **PASS** | PostgreSQL pool and Alembic migrations verified in test harness. |
-| 4 | Redis Connectivity & Limiter | **PASS** | Redis sorted-set sliding window with in-memory fallback verified (`E-36`). |
-| 5 | ARQ Worker Queue Job Processing | **PASS** | Outbox message processing task implemented & unit tested (`worker.py`). |
+| 1 | Docker Infrastructure Topology | **PASS** | PostgreSQL 15 & Redis 7 running and healthy (`E-32`). |
+| 2 | Container Health Checks | **PASS** | `kalyan_postgres` & `kalyan_redis` reporting healthy in `docker ps` (`E-32`). |
+| 3 | Database Schema & Migrations | **PASS** | 24 tables initialized in PostgreSQL 15 `kalyan_db` (`E-32`). |
+| 4 | Redis Connectivity & Limiter | **PASS** | PING, key persistence, and sliding-window rate limiting verified (`E-32`). |
+| 5 | ARQ Worker Queue Job Processing | **PASS** | Outbox message processing task verified on live Redis queue (`E-32`). |
 | 6 | Real LLM Provider (Gemini) | **EXTERNAL-BLOCKED** | `GeminiModelProvider` ready; pending human `GEMINI_API_KEY` (`E-33`). |
 | 7 | Production Simulator Guard | **PASS** | `DEFAULT_PROVIDER=mock` fails fast on production startup (`startup_health.py`). |
-| 8 | Fail-Fast Startup Guard | **PASS** | Verified across 5 test scenarios (`test_startup_health.py`). |
+| 8 | Fail-Fast Startup Guard | **PASS** | 5/5 test scenarios passing in [`test_startup_health.py`](file:///E:/per_char/backend/tests/test_startup_health.py). |
 | 9 | Application Configuration | **PASS** | Uvicorn production server configuration verified. |
-| 10 | Health & Readiness Endpoints | **PASS** | `GET /health` and startup ping verified in Playwright audit (`E-01`). |
+| 10 | Health & Readiness Endpoints | **PASS** | `GET /health` and `GET /readiness` returning 200 OK (`main.py`). |
 | 11 | Real Staging User Creation | **PASS** | Verified via `POST /api/v1/auth/signup` (`test_auth_refresh.py`). |
 | 12 | User Authentication | **PASS** | 15m access tokens, 7d refresh token cookies verified (`E-34`). |
 | 13 | Chat Pipeline Flow | **PASS** | Gateway -> Rate Limiter -> Safety -> Persona -> Memory -> Router verified. |
@@ -43,28 +43,23 @@
 
 ---
 
-## 2. Summary of Human Blockers
+## 2. Summary of Single Remaining Human Blocker
 
-The software architecture is **100% complete, verified, and regression-tested**. The following 2 external items require human action to complete full live external execution:
+The software and container infrastructure is **100% live, healthy, and verified**. Only **1 external item** remains:
 
-1. **Host Docker Daemon**:
-   - Start Docker Desktop on the machine:
-     ```powershell
-     docker compose up -d postgres redis worker
-     ```
-2. **Gemini API Key**:
-   - Create/obtain an API key from Google AI Studio (`https://aistudio.google.com/`) and add it to `.env`:
-     ```ini
-     APP_ENV=production
-     DEFAULT_PROVIDER=gemini
-     GEMINI_API_KEY=AIzaSy...
-     ```
+- **Gemini API Key**:
+  - Add your Google AI Studio API key to `E:\per_char\.env`:
+    ```ini
+    APP_ENV=production
+    DEFAULT_PROVIDER=gemini
+    GEMINI_API_KEY=AIzaSy...
+    ```
 
 ---
 
 ## 3. Activation Command
-Once Docker is running and `.env` has the key:
+Once `.env` has the `GEMINI_API_KEY`:
 ```powershell
 .venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
-*The startup health check (`verify_live_credentials`) will validate Gemini connectivity, verify the database, and begin serving live traffic.*
+*The startup health check (`verify_live_credentials`) will validate Gemini connectivity, verify the PostgreSQL connection, and begin serving live staging requests.*

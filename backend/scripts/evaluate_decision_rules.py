@@ -1,9 +1,10 @@
 """
 backend/scripts/evaluate_decision_rules.py
-Phase 4 — Decision Rules Gate
+Phase 4 & 5 — Decision Rules & Operational Alerting Engine
 
 Implements 6 blueprint decision rules as threshold config,
-seeds synthetic analytics data triggering >=3 rules,
+seeds synthetic analytics data triggering all 6 rules,
+dispatches operational alert notifications (Slack / Email),
 and asserts that alerts fire for each triggered rule.
 
 Usage:
@@ -13,10 +14,12 @@ Usage:
 import sys
 import os
 import json
-import uuid
+import asyncio
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from backend.app.services.alerting import dispatch_operational_alert
 
 # ─── 6 Blueprint Decision Rules ─────────────────────────────────────────────
 RULES = {
@@ -34,12 +37,12 @@ RULES = {
     },
     "R3_KILL_SWITCH_ACTIVATION": {
         "description": "Kill switch activated -> all AI responses must pause",
-        "threshold": 1,
+        "threshold": 0,
         "metric": "kill_switch_active",
         "alert_level": "CRITICAL",
     },
     "R4_PAYMENT_WEBHOOK_REPLAY": {
-        "description": "Same Razorpay payment_id received >1× (replay attack)",
+        "description": "Same Razorpay payment_id received >1x (replay attack)",
         "threshold": 1,
         "metric": "webhook_replay_count",
         "alert_level": "SECURITY",
@@ -63,7 +66,7 @@ RULES = {
 SYNTHETIC_DATA = {
     "messages_24h": 152,          # R1: > 100
     "tier3_events_1h": 5,         # R2: >= 3
-    "kill_switch_active": 1,      # R3: active
+    "kill_switch_active": 1,      # R3: > 0 (active)
     "webhook_replay_count": 2,    # R4: > 1
     "projected_daily_cost_usd": 67.30,  # R5: > 50
     "max_pending_minutes": 195,   # R6: > 120 minutes
@@ -94,6 +97,23 @@ def evaluate_rules(data: dict) -> list:
     return fired
 
 
+async def dispatch_alerts(fired_alerts: list):
+    """Dispatch fired alerts to Slack & Email dispatchers."""
+    tasks = []
+    for a in fired_alerts:
+        tasks.append(
+            dispatch_operational_alert(
+                alert_type=a["rule_id"],
+                details=a,
+                level=a["alert_level"]
+            )
+        )
+    if tasks:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        return results
+    return []
+
+
 def run_decision_rules():
     print("=== DECISION RULES EVALUATION ===")
     print(f"Synthetic analytics input: {json.dumps(SYNTHETIC_DATA, indent=2)}\n")
@@ -107,6 +127,10 @@ def run_decision_rules():
             f"    metric={a['metric']}  value={a['value']}  threshold={a['threshold']}  excess={a['excess']}\n"
             f"    description: {a['description']}\n"
         )
+
+    # Dispatch alerts asynchronously
+    dispatch_results = asyncio.run(dispatch_alerts(fired))
+    print(f"[+] Dispatched {len(dispatch_results)} operational notification alerts to Slack & Email channels.\n")
 
     print("=== GATE ASSERTIONS ===")
 

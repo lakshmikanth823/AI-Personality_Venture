@@ -47,9 +47,13 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: Optional[str] = os.getenv("RAZORPAY_KEY_SECRET", None)
     RAZORPAY_WEBHOOK_SECRET: str = os.getenv("RAZORPAY_WEBHOOK_SECRET", "rzp_webhook_secret_kalyan_2026")
 
-    # Operational Controls
+    # Operational Controls & Alerting
     KILL_SWITCH_ACTIVE: bool = False
     REQUIRE_HUMAN_APPROVAL_FOR_TIER1: bool = False # Tier 1 can auto-draft; Tier 2 strictly human approval
+    SLACK_WEBHOOK_URL: Optional[str] = os.getenv("SLACK_WEBHOOK_URL", None)
+    SMTP_HOST: Optional[str] = os.getenv("SMTP_HOST", None)
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    ALERT_EMAIL_RECIPIENT: str = os.getenv("ALERT_EMAIL_RECIPIENT", "ops@kalyan-ai.internal")
     
     # Financial & Unit Economics Telemetry
     COST_PER_1K_INPUT_TOKENS_USD: float = 0.0005

@@ -1,8 +1,9 @@
 import os
 from typing import Optional, List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
     PROJECT_NAME: str = "Kalyan — AI Personality Engine"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
@@ -48,11 +49,8 @@ class Settings(BaseSettings):
     COST_PER_1K_OUTPUT_TOKENS_USD: float = 0.0015
     INR_PER_USD: float = 86.0
     
-    # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
+    DAILY_COST_BUDGET_USD: float = float(os.getenv("DAILY_COST_BUDGET_USD", "50.0"))
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 settings = Settings()

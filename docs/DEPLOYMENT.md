@@ -86,11 +86,15 @@ cd ..
 ```
 *Note: Vite compiles the SPA to `frontend/dist`. FastAPI automatically serves these static files and maps index routes.*
 
-### Step 3: Initialize Database Schema & Seed Data
+### Step 3: Initialize Database Schema via Alembic Migrations
 ```bash
-python -c "from backend.app.core.database import init_db; init_db()"
+# Run versioned database migrations to head (zero create_all in non-test runtime)
+alembic upgrade head
+
+# Optional: Seed default canonical character lore & demo profiles
+python -c "from backend.app.core.database import SessionLocal; from backend.app.services.persona_engine import PersonaEngine; db = SessionLocal(); PersonaEngine(db).get_or_create_default_character(); db.close()"
 ```
-This automatically establishes all 22 database tables and default admin/operator credentials.
+This automatically establishes all 24 database tables through versioned migrations and bootstraps Kalyan's canonical lore.
 
 ---
 

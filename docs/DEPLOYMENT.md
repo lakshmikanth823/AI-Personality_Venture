@@ -28,7 +28,7 @@ Create `/etc/kalyan/production.env` (or `.env` in the project root with `chmod 6
 ENVIRONMENT=production
 PROJECT_NAME="Kalyan AI Personality"
 DEBUG=False
-SECRET_KEY="generate-secure-random-64-char-hex-secret-in-production"
+SECRET_KEY="REPLACE_WITH_64_CHAR_HEX_SECRET_KEY"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
@@ -36,30 +36,30 @@ ACCESS_TOKEN_EXPIRE_MINUTES=1440
 # For SQLite (default single-host):
 DATABASE_URL="sqlite:///./kalyan_personality.db"
 # For PostgreSQL (horizontal cluster):
-# DATABASE_URL="postgresql://kalyan_user:StrongPassword123@db.internal:5432/kalyan_db"
+# DATABASE_URL="postgresql://kalyan_user:REPLACE_WITH_DB_PASSWORD@db.internal:5432/kalyan_db"
 
 # LLM Model Provider Keys
 MODEL_PROVIDER="live_gemini"  # Options: live_gemini | live_openai | live_anthropic | mock
-GEMINI_API_KEY="AIzaSyYourProductionGeminiKey"
-OPENAI_API_KEY="sk-proj-YourProductionOpenAIKey"
-ANTHROPIC_API_KEY="sk-ant-YourProductionAnthropicKey"
+GEMINI_API_KEY="REPLACE_WITH_GEMINI_API_KEY"
+OPENAI_API_KEY="REPLACE_WITH_OPENAI_API_KEY"
+ANTHROPIC_API_KEY="REPLACE_WITH_ANTHROPIC_API_KEY"
 
 # Cost Model Accounting (USD per 1,000 tokens)
 COST_PER_1K_INPUT_TOKENS_USD=0.00015
 COST_PER_1K_OUTPUT_TOKENS_USD=0.00060
 
 # Payment Gateway (Razorpay / Stripe)
-RAZORPAY_KEY_ID="rzp_live_yourKeyId"
-RAZORPAY_KEY_SECRET="yourRazorpayLiveSecret"
-RAZORPAY_WEBHOOK_SECRET="rzp_webhook_secret_kalyan_2026"
+RAZORPAY_KEY_ID="rzp_live_REPLACE_WITH_KEY_ID"
+RAZORPAY_KEY_SECRET="REPLACE_WITH_RAZORPAY_LIVE_SECRET"
+RAZORPAY_WEBHOOK_SECRET="REPLACE_WITH_RAZORPAY_WEBHOOK_SECRET"
 
 # Social Platform API Credentials (when transitioning to live broadcast)
-X_API_KEY="your_x_api_key"
-X_API_SECRET="your_x_api_secret"
-X_ACCESS_TOKEN="your_x_access_token"
-X_ACCESS_SECRET="your_x_access_secret"
-INSTAGRAM_ACCESS_TOKEN="your_meta_graph_api_token"
-YOUTUBE_API_KEY="your_youtube_v3_api_key"
+X_API_KEY="REPLACE_WITH_X_API_KEY"
+X_API_SECRET="REPLACE_WITH_X_API_SECRET"
+X_ACCESS_TOKEN="REPLACE_WITH_X_ACCESS_TOKEN"
+X_ACCESS_SECRET="REPLACE_WITH_X_ACCESS_SECRET"
+INSTAGRAM_ACCESS_TOKEN="REPLACE_WITH_INSTAGRAM_ACCESS_TOKEN"
+YOUTUBE_API_KEY="REPLACE_WITH_YOUTUBE_API_KEY"
 ```
 
 ---

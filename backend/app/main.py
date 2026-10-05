@@ -36,12 +36,17 @@ from backend.app.api.v1.admin import router as admin_router
 from backend.app.api.v1.legal import router as legal_router
 from backend.app.api.v1.waitlist import router as waitlist_router
 
+from backend.app.core.startup_health import verify_live_credentials
+
 # Initialize structured JSON logging
 setup_structured_logging()
 logger = logging.getLogger("kalyan.core")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 0. Live credential and environment validation (Fail-Fast in production)
+    await verify_live_credentials()
+
     # 1. Initialize database schema
     init_db()
 

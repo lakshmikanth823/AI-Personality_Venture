@@ -1,178 +1,299 @@
-# Kalyan — The Brutally Honest Indian Internet Friend ☕
-## AI Personality Venture — Social-First Character Media Property & Operating System
+<div align="center">
 
-[![Tests](https://img.shields.io/badge/Pytest-27%2F27%20Passed-emerald.svg)](#testing)
-[![Benchmark](https://img.shields.io/badge/Persona%20Benchmark-200%2F200%20(100%25)-orange.svg)](#character-consistency-benchmarks)
-[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Tailwind%20(Vite)-blue.svg)](#frontend)
-[![Backend](https://img.shields.io/badge/Backend-FastAPI%20%2B%20SQLAlchemy-purple.svg)](#backend)
+# ☕ Kalyan — The Brutally Honest Indian Internet Friend
+### Autonomous AI Character Media Property, Fullstack Operating System & Social Engine
+
+[![Pytest Tests](https://img.shields.io/badge/Pytest-94%2F94%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
+[![Launch Gates](https://img.shields.io/badge/Launch%20Gates-20%2F20%20PASS-blue?style=for-the-badge)](docs/PHASE6_LAUNCH_GATE.md)
+[![LLM](https://img.shields.io/badge/Model-Google%20Gemini%203.5%20Flash--Lite-orange?style=for-the-badge&logo=google)](backend/app/services/model_provider.py)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%2015%20%2B%20Redis%207-blueviolet?style=for-the-badge&logo=postgresql)](docker-compose.yml)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%2B%20SQLAlchemy-009688?style=for-the-badge&logo=fastapi)](backend/app/main.py)
+[![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Tailwind%20CSS-61DAFB?style=for-the-badge&logo=react)](frontend/src)
+
+<br/>
+
+![Kalyan Hero Banner](docs/EVIDENCE/assets/kalyan_hero_banner.jpg)
+
+<br/>
+
+> **"Sharma ji ka beta FAANG crack karega, tera startup pitch deck dekh ke investor hasenge. Par main sach bolunga, kyunki dost wahi hai jo sach bataye."**  
+> — *Kalyan (Your Brutally Honest Internet Dost)*
+
+</div>
 
 ---
 
-## 1. Executive Direction & Core Thesis
+## 🌟 Executive Thesis
 
-> **"Build a recognizable AI character as a social-first media property first and software product second."**
+**Kalyan** is a **social-first AI character media property** designed with cultural depth, psychological boundaries, and emotional authenticity.
 
-The product is **NOT** a generic ChatGPT wrapper, assistant, or companion. It is **Kalyan** — *the brutally honest Indian internet friend*:
-- **Witty, observant, culturally fluent, confident, slightly chaotic, useful when needed, never cruel without purpose.**
-- Powered by Irani chai, Ameerpet grit, and zero corporate sugarcoating.
-- Code-switches naturally between Indian English, Hinglish, and selective Telugu idioms (*"Arre babu", "chudu", "sorted", "jugaad"*).
-
-### The Moat Ladder:
-$$\text{Character} \longrightarrow \text{Audience} \longrightarrow \text{Community} \longrightarrow \text{Lore} \longrightarrow \text{Interaction Data} \longrightarrow \text{Creator Ecosystem} \longrightarrow \text{Character IP}$$
-
----
-
-## 2. System Architecture
+Rather than acting as a subservient, generic chat assistant, Kalyan is an observant, street-smart 25-year-old friend from Hyderabad. He combines razor-sharp wit, Ameerpet tech grit, code-switching (*Hinglish + Telugu idioms*), and tough love to deliver practical reality checks on careers, dating, money, and modern Indian life.
 
 ```text
-Social/Web/WhatsApp Channels
-       ↓
-Channel Gateway & Rate Limiter
-       ↓
-Safety Ingestion & Prompt Injection Defense
-       ↓
-Persona Orchestrator
-   ├── L4 Character Lore (Canon Backstory)
-   ├── L3 Durable User Memory (Preferences & Context)
-   ├── L2 Session Summaries
-   └── L1 Session Message Context
-       ↓
-Model Router (Mock Deterministic / Gemini 1.5 / OpenAI / Anthropic)
-       ↓
-Safety Engine (4-Tier Risk Classification)
-       ↓
-Decision Gate
-   ├── Tier 0 (Safe) → Auto-Route / Direct Response
-   ├── Tier 1 / 2 → Human Approval Queue Console
-   └── Tier 3 (Hazard) → Block, Crisis Hotline Alert & Immutable Audit Log
-       ↓
-Publisher Adapters (X, Instagram, YouTube, WhatsApp)
-   [ Interlocked with Emergency Kill Switch ]
+CHARACTER  ──►  AUDIENCE  ──►  COMMUNITY  ──►  LORE  ──►  INTERACTION DATA  ──►  CREATOR ECOSYSTEM  ──►  CHARACTER IP
 ```
 
 ---
 
-## 3. Key Subsystems Built
+## 📸 Visual Showcase & Platform Tour
 
-### A. 4-Level Memory Engine (`backend/app/services/memory_engine.py`)
-1. **Level 1 — Session Memory**: Active conversation buffer.
-2. **Level 2 — Short-Term Summaries**: Rolling multi-turn discussion condensations.
-3. **Level 3 — Durable User Memory**: Key user facts, career details, sports fandom, and preferences extracted with confidence scoring.
-   - **Anti-Poisoning Guard**: Prevents conversational users from rewriting character lore or canonical facts.
-   - **User Privacy Rights**: In-app inspection, single-item deletion, bulk wipe, personalization opt-out, and JSON data export (DPDP Act compliant).
-4. **Level 4 — Character Lore**: Official verified canon (Ameerpet origins, Bunty's job hopping, rival Sharma ji ka beta) separated strictly from temporary improvisation.
+<div align="center">
 
-### B. Safety Engine & Governance (`backend/app/services/safety_engine.py`)
-- **Tier 0**: Low-risk memes, greetings, general banter → Automated clearance.
-- **Tier 1**: Edgy humor, personal roasts, workplace advice → Review / controlled parameters.
-- **Tier 2**: Sensitive claims (medical, legal, financial, political, defamatory) → Operator human approval required.
-- **Tier 3**: Severe hazards (self-harm, threats, fraud, prompt injection, doxxing) → Instant block, Tele-MANAS (14416) / Kiran (1800-599-0019) referral, and audit logging.
-- **Prompt Injection Containment**: Hardened regex and semantic defenses against instruction overrides, jailbreaks, and secret extraction attempts.
-
-### C. Emergency Global Kill Switch (`backend/app/services/kill_switch.py`)
-- Emergency shutoff for all external social media publishing and autonomous workers.
-- Instant DB and memory sync; publisher adapters check the kill switch *before* any network dispatch.
-- Detailed audit logging of activation reasons, actor IDs, and gradual recovery procedures.
-
-### D. Social Publisher Adapters (`backend/app/services/social_gateway.py`)
-- Modular publishing adapters for **X (Twitter)**, **Instagram**, **YouTube Shorts**, and **WhatsApp**.
-- Channel mention gateway for ingesting public interactions, classifying risk, and routing to the Approval Queue.
-
-### E. Analytics, Unit Economics & Business Rules (`backend/app/services/analytics_engine.py`)
-- **North-Star Metric**: **Weekly Meaningful Character Relationships (WMCR)** — unique users with $\ge 3$ meaningful interactions within a 7-day rolling window.
-- **Unit Economics**:
-  $$\text{Contribution Margin} = \text{Revenue} - (\text{Inference Cost} + \text{Payment Fees (2\%)} + \text{Infrastructure})$$
-- **Automated Decision Rules Engine**: Evaluates conversion and retention metrics to detect content problems, identity problems, onboarding friction, or cost/routing inefficiencies.
-
-### F. A/B Experimentation Framework (`backend/app/services/experiment_engine.py`)
-- Empirically tests the 6 Core Hypotheses:
-  - **H1**: Personality acquires users without utility.
-  - **H2**: Cultural specificity (Hinglish/Telugu) beats generic English humor.
-  - **H3**: Public interaction beats paid acquisition.
-  - **H4**: Users pay for personalized character experiences.
-  - **H5**: Memory improves retention.
-  - **H6**: Partial autonomy is safely deployable.
-
-### G. Monetization Ladder (`backend/app/services/subscription_engine.py`)
-- **Free Dost**: Standard web chat and session memory.
-- **Filterless Reality Check (₹49)**: In-depth resume roast / single custom reality check.
-- **Kalyan Fan Pass (₹149/mo)**: Unlimited web chat, priority L3 durable memory, voice preview notes.
-- **VIP Inner Circle (₹299/mo)**: Exclusive community lore brainstorms and early access.
-- **Canonical Lore Feature (₹999)**: Turn your situation into an official verified character lore item.
+### 1. Immersive Character Experience & Landing Hub
+*Modern Cyber-Desi UI with voice preview, sample roasts, character pillars, and verified lore.*
+![Landing Page](docs/EVIDENCE/assets/screenshot_landing_1440.png)
 
 ---
 
-## 4. Frontend & User Experience
-
-Built with **React 18 + Vite + Tailwind CSS + Lucide Icons**:
-- **Landing Page**: Immersive character hero, animated voice note preview, sample roasts carousel, and 5-pillar universe showcase.
-- **Chat Interface**: Clean interactive chat with tone switcher (Hinglish, Telugu-infused, English), real-time token/cost telemetry, and typing indicators.
-- **Share Card Generator**: Viral social quote card maker with custom gradients (*Ameerpet Chai, Cyberabad Neon, Filter Coffee Vintage*), verified badge, and one-click copy/tweet.
-- **Human Approval Console**: Operational review queue for social mentions and content candidates with inline editing and risk badges.
-- **Content Library & Scheduler**: Strategic 5-format mix visualizer (30% reply, 25% observation, 20% situation, 15% series, 10% lore).
-- **Analytics & Economics Dashboard**: Visual charts for WMCR, DAU/WAU, tokens processed, revenue, and contribution margin.
-- **A/B Experiment Telemetry**: Variant allocations, shares, and conversion tracking.
-- **Monetization & VIP Plans**: Pricing cards and simulated checkout workflow.
-- **Admin & Kill Switch Console**: Global emergency stop toggle, system audit logs, and canonical lore editor.
+### 2. Live Interactive Chat & Multi-Turn Context Memory
+*Context-aware Hyderabadi persona with dynamic tone shifting, memory recall, and live cost telemetry.*
+![Live Chat Interface](docs/EVIDENCE/assets/screenshot_chat_conversation_1440.png)
 
 ---
 
-## 5. Local Setup & Execution
+### 3. Human-in-the-Loop Operational Approval Queue
+*Safe autonomous governance: operator review, inline editing, and risk-tier validation before social broadcast.*
+![Approval Queue](docs/EVIDENCE/assets/screenshot_approval_1440.png)
+
+---
+
+### 4. North Star WMCR, Economics & Real-Time Telemetry
+*Weekly Meaningful Character Relationships (WMCR), token usage, revenue, and unit economics.*
+![Analytics Dashboard](docs/EVIDENCE/assets/screenshot_analytics_1440.png)
+
+---
+
+### 5. Content Universe & 5-Format Mix Visualizer
+*Balanced content cadence: 30% replies, 25% observations, 20% user situations, 15% recurring series, 10% lore.*
+![Content Library](docs/EVIDENCE/assets/screenshot_content_1440.png)
+
+---
+
+### 6. Viral Social Share Card Generator
+*Dynamic quote card engine with custom gradients (Ameerpet Chai, Cyberabad Neon, Filter Coffee Vintage).*
+![Share Card Sample](docs/EVIDENCE/assets/share_card_case_01.png)
+
+</div>
+
+---
+
+## 🏛️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Ingress["Client & Multi-Channel Ingress"]
+        WebUser["React 18 Single Page App"]
+        MetaInbound["WhatsApp Cloud API & Instagram Mentions"]
+        XInbound["X (Twitter) Mentions"]
+    end
+
+    subgraph SecurityTier["Security, Rate Limiting & Ingress"]
+        Nginx["Nginx Reverse Proxy (TLS 1.3 / HTTP/2)"]
+        RateLimiter["Token Bucket Rate Limiter (Redis)"]
+        ObsMW["Observability & Request Tracing Middleware"]
+    end
+
+    subgraph CoreEngine["FastAPI Multi-Worker Cluster"]
+        Router["Persona & Dialogue Orchestrator"]
+        SafetyEngine["Hybrid Regex + Semantic Safety Guard (Tier 0-3)"]
+        MemorySys["4-Level Memory & DPDP Privacy Engine"]
+        KillSwitch["P0 Emergency Kill Switch Manager"]
+        GeminiAPI["Google Gemini 3.5 Flash-Lite LLM"]
+    end
+
+    subgraph Persistence["State, Cache & Asynchronous Tasks"]
+        PostgresDB[("PostgreSQL 15 (24 Schema Tables)")]
+        RedisQueue[("Redis 7 Cache & Queue")]
+        ARQWorker["ARQ Background Task Worker"]
+        Outbox["Transactional Outbox Pipeline"]
+    end
+
+    subgraph BroadcastEgress["Multi-Channel Publishing & Sinks"]
+        SocialAdapters["Social Media Adapters (X, IG, YT, WA)"]
+        SlackAlerts["Slack Operations Webhooks"]
+        EmailAlerts["Email SMTP On-Call Dispatch"]
+        PaymentGW["Razorpay / Stripe Payment Webhooks"]
+    end
+
+    WebUser & MetaInbound & XInbound --> Nginx
+    Nginx --> RateLimiter --> ObsMW --> Router
+
+    Router --> SafetyEngine
+    SafetyEngine --> GeminiAPI
+    Router --> MemorySys
+    Router --> KillSwitch
+
+    Router --> PostgresDB
+    Router --> RedisQueue
+    Router --> ARQWorker
+
+    ARQWorker --> Outbox --> SocialAdapters
+    Router --> SlackAlerts & EmailAlerts & PaymentGW
+```
+
+---
+
+## 🚀 Key Subsystems & Core Innovations
+
+### 1. Real Google Gemini 3.5 Flash-Lite Pipeline
+- **Authentic Voice Canon**: Tuned prompt architecture that prevents robotic assistant phrasing while enforcing sharp, cultural humor (*Bunty, Sharma ji ka beta, Chai point, Ameerpet, Cyberabad*).
+- **Candidate Fallbacks**: Seamless failover to `gemini-3.1-flash-lite` and `gemini-3.5-flash` with zero user disruption.
+- **Cost & Token Telemetry**: Every interaction writes token counts and estimated USD/INR spend directly to PostgreSQL `cost_events`.
+
+### 2. 4-Level Memory & DPDP Act 2023 Privacy Controls
+- **Level 1 (Session Memory)**: Rolling active conversation buffer.
+- **Level 2 (Summaries)**: Compact multi-turn context condensations.
+- **Level 3 (Durable Facts)**: User-specific career goals, preferences, and inside jokes extracted with confidence scores.
+- **Level 4 (Canonical Lore)**: Fixed universe lore protected against memory poisoning.
+- **Privacy First**: Granular consent capture, memory viewing, single-fact deletion, total data wipe, and DPDP Act 2023 compliance tombstones.
+
+### 3. Multi-Tier AI Safety & Crisis Routing
+- **Tier 0**: Low-risk banter and friendly roasting $\to$ Automated clearance.
+- **Tier 1**: Workplace feedback and career dilemmas $\to$ Monitored parameters.
+- **Tier 2**: Medical, legal, financial, or defamatory claims $\to$ Strict disclaimers + Human review.
+- **Tier 3 (Severe Hazard)**: Self-harm, doxxing, violence, or prompt injection $\to$ Instant block, crisis routing to **Tele-MANAS (14416)** / **Kiran (1800-599-0019)**, and immutable audit logging.
+
+### 4. P0 Emergency Global Kill Switch
+- **Sub-millisecond Egress Halt**: Instantly stops all external social posts, scheduled jobs, and background workers via admin API or CLI.
+- **Live Inference Cut**: Returns `HTTP 503 Service Unavailable` with explanatory message.
+- **Transactional Outbox Guard**: Aborts queued outbox actions before network egress with status `cancelled_by_kill_switch`.
+
+### 5. Multi-Platform Social Media Adapters
+- **X (Twitter)**: Character thread publishing and reply automation.
+- **Instagram Graph API**: Reel caption and carousel publish endpoints.
+- **YouTube Data API v3**: YouTube Shorts metadata and community publishing.
+- **WhatsApp Cloud API**: Direct conversational interaction with verification token handshake.
+
+### 6. Payment Sandbox & Subscription Engine
+- **HMAC-SHA256 Webhook Verification**: Cryptographically signed Razorpay/Stripe payload processing.
+- **Replay Defense**: Idempotent event ledger preventing duplicate subscription activations.
+- **Plan Tiers**:
+  - `free`: 10 messages/day
+  - `single_roast_49` (₹49): One-off deep resume / profile reality check
+  - `fan_pass_149` (₹149/mo): 500 messages/day + priority durable memory
+  - `vip_insider_299` (₹299/mo): Unlimited messaging + early access features
+  - `custom_lore_999` (₹999): Canonical user lore integration
+
+---
+
+## 🧪 Verification & Evidence Ledger (100% Real-World Verified)
+
+All capabilities are accompanied by audited evidence logs in [`docs/EVIDENCE/`](docs/EVIDENCE/):
+
+| Evidence ID | Focus Area | Status | Verification Summary |
+| :--- | :--- | :--- | :--- |
+| **E-01** | Frontend Responsive UI/UX | **PASS** | Playwright Chromium audit (1440px, 768px, 390px) with 0 errors |
+| **E-04** | Two-Factor Authentication (MFA) | **PASS** | Mandatory TOTP enforcement for Operator/Admin accounts |
+| **E-18** | Emergency Kill Switch | **PASS** | Global broadcast cutoff and audit trail validation |
+| **E-20** | Automated Secret Scanner | **PASS** | Zero hardcoded keys or private credentials in repository |
+| **E-32** | Staging Topology Containerization | **PASS** | Docker Compose: PostgreSQL 15, Redis 7, ARQ Worker live |
+| **E-33** | Gemini Live LLM Connection | **PASS** | Google AI Studio handshake with `gemini-3.5-flash-lite` |
+| **E-34** | Multi-Tenant IDOR Penetration | **PASS** | Strict cross-user conversation isolation (`HTTP 403 Forbidden`) |
+| **E-35** | Live LLM Prompt Injection Defense | **PASS** | Adversarial jailbreak attempts intercepted with canonical refusal |
+| **E-37** | Tele-MANAS Crisis Intervention | **PASS** | Self-harm trigger redirects to official 14416 helpline |
+| **E-43** | Live Gemini Chat Completion | **PASS** | Real end-to-end Hinglish dost response generation |
+| **E-44** | Payment Sandbox & Entitlements | **PASS** | HMAC-SHA256 webhook verification and automatic plan upgrade |
+| **E-45** | Social Adapters & Outbox Egress | **PASS** | Multi-channel adapters, Meta challenges, outbox kill switch abort |
+| **E-46** | Prometheus Metrics & Alerting | **PASS** | Live `/metrics` scraping, Slack & Email multi-channel alerts |
+| **E-47** | Controlled Beta Cohort Management | **PASS** | Waitlist FIFO queueing, deduplication defense, user onboarding |
+
+---
+
+## 🛠️ Quickstart & Local Setup
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+ & npm
+- **Python 3.11+**
+- **Node.js 18+** & npm
+- **Docker Desktop** (for PostgreSQL 15 & Redis 7)
 
-### Running the Unified Fullstack Server (FastAPI + Built React SPA)
+### 1. Clone & Configure Environment
 ```bash
-# 1. Activate Virtual Environment
-.venv\Scripts\activate   # Windows
-source .venv/bin/activate # Linux / macOS
+git clone https://github.com/lakshmikanth823/AI-Personality_Venture.git
+cd AI-Personality_Venture
 
-# 2. Run Unified Server
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+# Copy environment template
+cp .env.example .env
 ```
-Open your browser at `http://localhost:8000`:
-- **Web Application**: `http://localhost:8000/`
-- **Interactive Swagger API Docs**: `http://localhost:8000/docs`
-- **System Health**: `http://localhost:8000/health`
 
-### Running Frontend in Standalone Development Mode (Vite HMR)
+Edit `.env` and add your **Google AI Studio Gemini API Key**:
+```ini
+APP_ENV=production
+DEFAULT_PROVIDER=gemini
+GEMINI_API_KEY=AIzaSyYourRealKeyHere...
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/kalyan_db
+REDIS_URL=redis://localhost:6379/0
+```
+
+### 2. Start Infrastructure Containers
 ```bash
-cd frontend
-npm run dev
+docker compose up -d postgres redis
 ```
-Accessible at `http://localhost:3000` (auto-proxies `/api` to port 8000).
+
+### 3. Setup Virtual Environment & Database
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r backend/requirements.txt
+
+# Run migrations / initialize 24 tables
+python backend/scripts/init_postgres_schema.py
+```
+
+### 4. Run Automated Test Suite (94/94 Green)
+```bash
+pytest -v
+```
+
+### 5. Launch Application
+```bash
+# Start FastAPI backend (with embedded React build)
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+Open **`http://127.0.0.1:8000`** in your browser.
+
+- **Web Application**: `http://127.0.0.1:8000/`
+- **Interactive Swagger Docs**: `http://127.0.0.1:8000/docs`
+- **Prometheus Metrics**: `http://127.0.0.1:8000/metrics`
+- **System Readiness Probe**: `http://127.0.0.1:8000/readiness`
 
 ---
 
-## 6. Testing & Validation
+## 📁 Repository Structure
 
-### Automated Pytest Suite (All 27 Tests Passing)
-```bash
-.venv\Scripts\pytest.exe -v
+```text
+AI-Personality_Venture/
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/          # FastAPI route controllers (chat, auth, waitlist, etc.)
+│   │   ├── core/            # Config, security, DB engine, Prometheus registry
+│   │   ├── models/          # 24 SQLAlchemy relational data models
+│   │   ├── schemas/         # Pydantic validation schemas
+│   │   └── services/        # Persona, safety, memory, kill switch, social gateways
+│   ├── scripts/             # Automated verification, load testing & DR drills
+│   └── tests/               # 94 comprehensive pytest regression suites
+├── frontend/
+│   ├── src/                 # React 18 SPA components, hooks & state
+│   └── dist/                # Optimized production frontend build
+├── docs/
+│   ├── EVIDENCE/            # Evidence records E-01 through E-47 + screenshot assets
+│   ├── DEPLOYMENT.md        # Production Nginx, Uvicorn & systemd runbook
+│   ├── DISASTER_RECOVERY.md # BCP, PostgreSQL PITR & backup restore drill
+│   ├── FINAL_REALITY_AUDIT.md # Final production sign-off matrix
+│   └── PHASE6_LAUNCH_GATE.md # 20/20 Launch gate evaluation report
+├── docker-compose.yml       # Production topology definition (Postgres 15, Redis 7)
+├── Dockerfile               # Production multi-stage Docker container
+└── README.md                # Platform documentation & master guide
 ```
-Includes:
-- `test_end_to_end_journeys.py`: All 9 End-to-End User Journeys (New User, Returning User, Public Interaction, Unsafe Content, Prompt Injection, Memory Control, Admin Approval, Kill Switch, Payment).
-- `test_persona.py`: Persona prompt assembly, constitution loading, and tone variants.
-- `test_memory.py`: 4-level memory extraction, anti-poisoning guard, and privacy deletion.
-- `test_safety.py`: 4-tier risk classification and prompt injection defense.
-- `test_kill_switch.py`: Emergency kill switch halt and restoration.
-- `test_content_publisher.py`: Candidate batch generation and social adapters.
-- `test_analytics_cost.py`: WMCR, token telemetry, and contribution margin calculations.
 
-### Character Consistency Benchmark Suite (200 Prompts — 100% Pass Rate)
-```bash
-.venv\Scripts\python.exe -m backend.app.benchmarks.benchmark_200
-```
-Evaluates 200 benchmark prompts across 10 categories:
-1. Humor & Sarcasm (25/25) — 100%
-2. Disagreement & Tough Love (20/20) — 100%
-3. Anger & Hostility Handling (20/20) — 100%
-4. Uncertainty & Intellectual Humility (15/15) — 100%
-5. Sensitive Topics (Health, Legal, Political, Defamation) (25/25) — 100%
-6. Compliments & Flattery (15/15) — 100%
-7. Insults & Provocations (20/20) — 100%
-8. Cultural Fluency & Indian References (25/25) — 100%
-9. Prompt Injection & Jailbreak Traps (25/25) — 100%
-10. Emotional Dependency & Boundaries (10/10) — 100%
+---
+
+## 📜 License & Compliance
+
+- **License**: MIT License
+- **Privacy Compliance**: Designed in alignment with the **Digital Personal Data Protection (DPDP) Act, 2023** (India).
+- **Crisis Helpline**: Integration with **Tele-MANAS (14416)** and **Kiran (1800-599-0019)** for automated crisis intervention.
+
+<div align="center">
+Built with ❤️ and chai by the Antigravity Autonomous Systems Engineering Team.
+</div>

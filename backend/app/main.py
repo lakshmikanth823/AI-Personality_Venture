@@ -197,6 +197,22 @@ def health_check():
         "archetype": "The brutally honest Indian internet friend"
     }
 
+@app.get("/readiness")
+def readiness_check(db: Session = Depends(get_db)):
+    # Verify database readiness
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        db_status = "ready"
+    except Exception as e:
+        db_status = f"unhealthy: {e}"
+
+    return {
+        "status": "ready" if db_status == "ready" else "degraded",
+        "database": db_status,
+        "environment": settings.APP_ENV
+    }
+
 @app.get("/metrics")
 def get_prometheus_metrics(db: Session = Depends(get_db)):
     content = metrics_registry.render_prometheus(db)

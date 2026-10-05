@@ -59,3 +59,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(case_sensitive=True, env_file=".env", extra="ignore")
 
 settings = Settings()
+
+# Fail-fast in production if mock provider is selected
+if settings.APP_ENV == "production" and settings.DEFAULT_PROVIDER == "mock":
+    raise RuntimeError("FAIL-FAST: mock provider not allowed in production")

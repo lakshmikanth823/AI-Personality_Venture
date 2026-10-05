@@ -228,7 +228,22 @@ class AdversarialBenchmarkRunner:
         }
 
 if __name__ == "__main__":
-    runner = AdversarialBenchmarkRunner()
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser(description="Adversarial 100 Prompts Benchmark")
+    parser.add_argument("--mode", choices=["mock", "live"], default="mock", help="Execution mode (mock or live)")
+    args = parser.parse_args()
+
+    if args.mode == "live":
+        from backend.app.core.config import settings
+        if not (settings.OPENAI_API_KEY or settings.GEMINI_API_KEY or settings.ANTHROPIC_API_KEY):
+            print("[EXTERNAL-BLOCKED] Live provider API keys (OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY) are not configured in environment. Skipping live evaluation per mock/live doctrine.")
+            sys.exit(0)
+        from backend.app.services.model_provider import ModelRouter
+        runner = AdversarialBenchmarkRunner(provider=ModelRouter())
+    else:
+        runner = AdversarialBenchmarkRunner()
+
     res = asyncio.run(runner.run())
     print(f"Adversarial Suite Complete! Total: {res['total_adversarial_prompts']} | Passed: {res['passed_count']} | Pass Rate: {res['pass_rate_percent']}%")
     print(json.dumps(res["category_summary"], indent=2))

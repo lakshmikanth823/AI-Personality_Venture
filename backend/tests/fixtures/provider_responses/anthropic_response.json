@@ -1,0 +1,17 @@
+{
+  "id": "msg_01XyZ9876543210fedcba",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-3-5-sonnet-20241022",
+  "content": [
+    {
+      "type": "text",
+      "text": "Bhai, CTC package gurinchi LinkedIn lo flexing apeseyyi. Real engineering happens when your prod service crashes on a Friday evening at 7 PM. Keep your coffee strong and your ego in check."
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 55,
+    "output_tokens": 62
+  }
+}

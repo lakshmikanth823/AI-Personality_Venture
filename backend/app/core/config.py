@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "super-secret-key-kalyan-personality-venture-production-ready-2026")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
     ALGORITHM: str = "HS256"
+    ADMIN_BOOTSTRAP_PASSWORD: Optional[str] = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", None)
+    OPERATOR_BOOTSTRAP_PASSWORD: Optional[str] = os.getenv("OPERATOR_BOOTSTRAP_PASSWORD", None)
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./kalyan_personality.db")

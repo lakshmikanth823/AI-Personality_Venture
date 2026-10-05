@@ -1,0 +1,21 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "Boss, Ameerpet lo coaching theesukoni US F1 visa stamp ayindi anagane Silicon Valley CEO ayipoyinattu feel avvaku. First year lo assignments, second year lo layoffs reality nerputhayi."
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 38,
+    "candidatesTokenCount": 54,
+    "totalTokenCount": 92
+  }
+}

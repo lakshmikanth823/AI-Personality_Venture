@@ -33,6 +33,7 @@ from backend.app.api.v1.analytics import router as analytics_router
 from backend.app.api.v1.experiments import router as experiments_router
 from backend.app.api.v1.subscriptions import router as subscriptions_router
 from backend.app.api.v1.admin import router as admin_router
+from backend.app.api.v1.legal import router as legal_router
 
 # Initialize structured JSON logging
 setup_structured_logging()
@@ -176,6 +177,8 @@ app.include_router(analytics_router, prefix=settings.API_V1_STR)
 app.include_router(experiments_router, prefix=settings.API_V1_STR)
 app.include_router(subscriptions_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(legal_router)
+app.include_router(legal_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 def health_check():

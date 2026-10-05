@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
 from backend.app.models.user import User, Profile, UserRole
+from backend.app.models.safety import AuditLog
 from backend.app.schemas.auth import (
     UserSignup, UserLogin, Token, UserProfile,
     MFASetupResponse, MFAVerifyRequest, ChangePasswordRequest
@@ -15,6 +16,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=Token)
 def signup(data: UserSignup, db: Session = Depends(get_db)):
+    # 1. DPDP Act 2023 Consent Enforcement
+    if not data.consent_given:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Digital Personal Data Protection (DPDP) Act 2023 consent must be accepted to register."
+        )
+
     # Check existing email or username
     existing_user = db.query(User).filter(
         (User.email == data.email) | (User.username == data.username)
@@ -49,6 +57,17 @@ def signup(data: UserSignup, db: Session = Depends(get_db)):
         preferred_language=data.preferred_language or "hinglish"
     )
     db.add(new_profile)
+
+    audit_consent = AuditLog(
+        id=str(uuid.uuid4()),
+        actor_id=user_id,
+        actor_role="user",
+        action="DPDP_CONSENT_CAPTURED",
+        target_type="user",
+        target_id=user_id,
+        details_json='{"dpdp_act_version": "2023", "consent_type": "explicit_signup", "language": "hinglish"}'
+    )
+    db.add(audit_consent)
     db.commit()
 
     token = create_access_token(data={"sub": user_id, "role": role.value, "mfa_authenticated": True})

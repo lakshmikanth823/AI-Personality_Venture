@@ -1,6 +1,8 @@
 import uuid
+import json
 from datetime import datetime, timezone
 from typing import Optional, List
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -8,6 +10,7 @@ from backend.app.core.config import settings
 from backend.app.core.database import get_db
 from backend.app.models.conversation import Conversation, Message
 from backend.app.models.user import User, UserRole
+from backend.app.models.safety import AuditLog
 from backend.app.models.character import CharacterLore
 from backend.app.models.analytics import CostEvent
 from backend.app.schemas.chat import ChatRequest, ChatResponse, ConversationDetail, MessageItem
@@ -280,3 +283,50 @@ def get_conversation_history(
         created_at=conv.created_at.isoformat(),
         messages=messages
     )
+
+class ContentReportPayload(BaseModel):
+    message_id: Optional[str] = None
+    content_text: str
+    category: str = "safety_violation"
+    reason: Optional[str] = None
+
+@router.post("/report")
+def report_content(
+    payload: ContentReportPayload,
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    actor_id = current_user.id if current_user else "anonymous_user"
+    report_id = f"rep_{uuid.uuid4().hex[:12]}"
+    
+    # 1. Run safety evaluation on the reported text
+    safety_eng = SafetyEngine(db)
+    eval_res = safety_eng.evaluate_text(payload.content_text, entity_type="user_report", entity_id=report_id)
+    
+    # 2. Record immutable audit log
+    audit = AuditLog(
+        id=report_id,
+        actor_id=actor_id,
+        actor_role="user" if current_user else "anonymous",
+        action="USER_CONTENT_REPORT",
+        target_type="chat_message",
+        target_id=payload.message_id or "unspecified",
+        details_json=json.dumps({
+            "category": payload.category,
+            "reason": payload.reason,
+            "content_excerpt": payload.content_text[:200],
+            "risk_tier": eval_res["risk_tier"],
+            "policy_flag": eval_res["policy_flag"]
+        }),
+        timestamp=datetime.now(timezone.utc)
+    )
+    db.add(audit)
+    db.commit()
+    
+    return {
+        "status": "reported",
+        "report_id": report_id,
+        "category": payload.category,
+        "message": "Thank you for reporting. This content has been logged and queued for operator review.",
+        "evaluated_tier": eval_res["risk_tier"]
+    }

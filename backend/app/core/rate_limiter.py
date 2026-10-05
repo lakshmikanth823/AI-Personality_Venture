@@ -1,18 +1,49 @@
 import time
+import uuid
+import logging
 from typing import Dict, List, Optional
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+from backend.app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+# Attempt Redis connection for distributed rate limiting
+_redis_client = None
+try:
+    import redis
+    if settings.REDIS_URL and getattr(settings, "APP_ENV", "") != "test":
+        _redis_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=1.0)
+        # Quick ping to verify connectivity
+        _redis_client.ping()
+except Exception as e:
+    logger.info(f"Redis rate limiter unavailable ({e}), using in-memory sliding window rate limiter.")
+    _redis_client = None
 
 class SlidingWindowRateLimiter:
     """
-    In-memory sliding window rate limiter for protecting endpoints against DoS and abuse.
-    Tracks timestamps per client key (IP or user ID).
+    Distributed (Redis-backed) and in-memory sliding window rate limiter
+    for protecting endpoints against DoS, brute-force, and abuse.
     """
-    def __init__(self, default_limit: int = 120, window_seconds: int = 60):
+    def __init__(self, default_limit: int = 120, window_seconds: int = 60, redis_url: Optional[str] = None):
         self.default_limit = default_limit
         self.window_seconds = window_seconds
         self.client_records: Dict[str, List[float]] = {}
+        self.redis_client = None
+        
+        # Connect to redis if provided and reachable
+        if redis_url and getattr(settings, "APP_ENV", "") != "test":
+            try:
+                import redis
+                r = redis.Redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=1.0)
+                r.ping()
+                self.redis_client = r
+            except Exception:
+                self.redis_client = None
+        elif _redis_client is not None:
+            self.redis_client = _redis_client
+
         # Route-specific limit overrides (e.g. login brute-force prevention)
         self.route_limits: Dict[str, int] = {
             "/api/v1/auth/login": 15,
@@ -30,6 +61,29 @@ class SlidingWindowRateLimiter:
         window_start = now - self.window_seconds
         max_reqs = limit if limit is not None else self.default_limit
 
+        # 1. Distributed Redis sliding window
+        if self.redis_client:
+            try:
+                key = f"ratelimit:{client_key}"
+                pipe = self.redis_client.pipeline()
+                # Remove timestamps older than current window
+                pipe.zremrangebyscore(key, 0, window_start)
+                # Count requests in window
+                pipe.zcard(key)
+                # Add current request timestamp
+                pipe.zadd(key, {f"{now}:{uuid.uuid4().hex[:6]}": now})
+                # Set TTL to window + 5s buffer
+                pipe.expire(key, self.window_seconds + 5)
+                results = pipe.execute()
+                
+                req_count = results[1] # count before adding current
+                if req_count >= max_reqs:
+                    return False
+                return True
+            except Exception as ex:
+                logger.warning(f"Redis rate limit check failed ({ex}), falling back to in-memory.")
+
+        # 2. In-Memory fallback
         if client_key not in self.client_records:
             self.client_records[client_key] = [now]
             return True
@@ -55,6 +109,13 @@ class SlidingWindowRateLimiter:
 
     def reset(self):
         self.client_records.clear()
+        if self.redis_client:
+            try:
+                keys = self.redis_client.keys("ratelimit:*")
+                if keys:
+                    self.redis_client.delete(*keys)
+            except Exception:
+                pass
 
 limiter = SlidingWindowRateLimiter(default_limit=120)
 
@@ -85,8 +146,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         client_ip = get_client_ip(request, behind_trusted_proxy=self.behind_trusted_proxy)
-        from backend.app.core.config import settings
-        if client_ip == "testclient" and getattr(settings, "ENVIRONMENT", "") == "test":
+        if client_ip == "testclient" and getattr(settings, "APP_ENV", "") == "test":
             req_limit = 10000
         else:
             req_limit = limiter.get_limit_for_path(path)
@@ -99,9 +159,4 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
                 }
             )
 
-        response = await call_next(request)
-        return response
-
-def rate_limit_dependency(request: Request):
-    client_ip = get_client_ip(request, behind_trusted_proxy=False)
-    limiter.check_rate_limit(client_ip)
+        return await call_next(request)

@@ -18,8 +18,9 @@ class Settings(BaseSettings):
     APP_ENV: str = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development"))
     BETA_COHORT_CAP: int = int(os.getenv("BETA_COHORT_CAP", "50"))
     
-    # Database
+    # Database & Cache
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./kalyan_personality.db")
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     
     # AI Providers & Model Configuration
     DEFAULT_PROVIDER: str = os.getenv("DEFAULT_PROVIDER", "mock") # "mock" | "gemini" | "openai" | "anthropic"

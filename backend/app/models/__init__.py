@@ -4,7 +4,7 @@ from backend.app.models.memory import Memory
 from backend.app.models.character import CharacterVersion, CharacterRule, CharacterLore
 from backend.app.models.content import ContentCandidate, Approval, PublishedAction, SocialAccount
 from backend.app.models.safety import ModerationResult, AuditLog, KillSwitchState
-from backend.app.models.analytics import UsageEvent, CostEvent, DailyMetric
+from backend.app.models.analytics import UsageEvent, CostEvent, DailyMetric, InteractionEvent
 from backend.app.models.experiment import Experiment, ExperimentVariant
 from backend.app.models.subscription import Subscription, PaymentTransaction
 from backend.app.models.waitlist import WaitlistEntry
@@ -16,7 +16,7 @@ __all__ = [
     "CharacterVersion", "CharacterRule", "CharacterLore",
     "ContentCandidate", "Approval", "PublishedAction", "SocialAccount",
     "ModerationResult", "AuditLog", "KillSwitchState",
-    "UsageEvent", "CostEvent", "DailyMetric",
+    "UsageEvent", "CostEvent", "DailyMetric", "InteractionEvent",
     "Experiment", "ExperimentVariant",
     "Subscription", "PaymentTransaction",
     "WaitlistEntry"

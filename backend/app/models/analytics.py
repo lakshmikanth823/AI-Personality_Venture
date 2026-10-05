@@ -41,3 +41,15 @@ class DailyMetric(Base):
     total_cost_usd = Column(Float, default=0.0)
     total_revenue_inr = Column(Float, default=0.0)
     safety_incidents = Column(Integer, default=0)
+
+class InteractionEvent(Base):
+    __tablename__ = "interaction_events"
+
+    id = Column(String(36), primary_key=True, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_type = Column(String(64), nullable=False, index=True) # impression, share, follow, interaction_start, meaningful_interaction, return_d1, return_d7, return_d30
+    variant_id = Column(String(64), nullable=True, index=True) # e.g. "kalyan_v1_punchy", "generic_assistant"
+    platform = Column(String(32), default="web", nullable=False) # web, x, instagram, youtube
+    metadata_json = Column(Text, default="{}")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+

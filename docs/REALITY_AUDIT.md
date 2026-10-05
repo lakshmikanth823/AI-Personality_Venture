@@ -1,0 +1,20 @@
+# Kalyan AI Personality Venture — Reality Audit Matrix
+## Claims vs. Reality Verification (Phase 2)
+
+| Claim from Report | Evidence in Code | Real / Mock / Partial | Tested Live? | External Dependency | Risk | Required Action | Status |
+|---|---|---|---|---|---|---|---|
+| **Full Model Abstraction (Gemini, OpenAI, Anthropic)** | `backend/app/services/model_provider.py` | **PARTIAL** | Mock & Gemini tested; OpenAI/Anthropic not written | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | HIGH: Vendor lock-in risk if OpenAI/Anthropic unavailable | Implement concrete `OpenAIProvider`, `AnthropicProvider`, and dynamic fallback router | **FIXING** |
+| **Persona Engine & Constitution** | `backend/app/services/persona_engine.py` | **REAL** | YES (200 benchmark prompts passed) | None | LOW | Expand with 100 new adversarial prompts to prevent corporate drift | **VERIFIED** |
+| **4-Level Memory System** | `backend/app/services/memory_engine.py` | **REAL** | YES (Unit & E2E tests) | None | MEDIUM: User isolation must be strictly audited | Add strict tenant isolation tests & account wipe tests | **VERIFIED** |
+| **Memory Anti-Poisoning** | `backend/app/services/memory_engine.py` | **REAL** | YES | None | MEDIUM: Creative prompt injection poisoning | Test advanced indirect poisoning patterns | **VERIFIED** |
+| **4-Tier Risk Safety Engine** | `backend/app/services/safety_engine.py` | **REAL** | YES | None | HIGH: Subtle toxicity / political bias | Create 100 new adversarial safety test cases | **VERIFIED** |
+| **Global Emergency Kill Switch** | `backend/app/services/kill_switch.py` | **REAL** | YES (Pytest verified) | None | HIGH: Race conditions during high throughput | Add multi-threaded race condition tests | **VERIFIED** |
+| **Social Publishing Adapters (X, IG, YT, WA)** | `backend/app/services/social_gateway.py` | **SIMULATED** | Local simulator only | X API v2, Meta Graph API, WhatsApp Cloud API | MEDIUM: Unverified live network dispatch | Document exact credentials required, add real HTTP request preparation, mark as External-Blocked | **RECLASSIFIED** |
+| **Content Scheduler** | `backend/app/services/content_engine.py` | **PARTIAL** | Candidate generation tested; cron worker simulated | Background queue worker | MEDIUM: Scheduled posts not auto-dispatched by daemon | Implement active background scheduler worker loop | **FIXING** |
+| **Monetization & Subscriptions** | `backend/app/services/subscription_engine.py` | **PARTIAL** | Local simulated checkout; quotas not enforced in chat | Razorpay / Stripe gateway keys | HIGH: Users could bypass daily message limits | Enforce quota in `/chat/message`; add webhook signature verification scaffold | **FIXING** |
+| **Analytics & WMCR Calculation** | `backend/app/services/analytics_engine.py` | **REAL** | YES (Tested with synthetic DB queries) | None | LOW | Ensure zero synthetic leakage in production | **VERIFIED** |
+| **A/B Experimentation Engine** | `backend/app/services/experiment_engine.py` | **REAL** | YES | None | LOW | Verify conversion telemetry persistence | **VERIFIED** |
+| **Authorization & Tenant Isolation** | `backend/app/api/v1/chat.py`, `approval.py` | **BROKEN** | Audited: IDOR on conversation history; unauthenticated approval endpoint | None | **CRITICAL: Privacy leak & unauthorized access** | Add ownership checks on conversations; require auth on approval queue | **FIXING** |
+| **API Rate Limiting** | Missing middleware | **BROKEN** | Missing on `/chat/message` | Redis / Memory rate limiter | HIGH: DoS / Cost explosion risk | Implement in-memory IP/User sliding window rate limiter | **FIXING** |
+| **Database Migrations** | `backend/app/core/database.py` | **REAL** (Direct DDL) | `Base.metadata.create_all` works cleanly | PostgreSQL in prod | MEDIUM: Alembic script formalization | Verify clean DB spin-up and foreign key cascade deletes | **VERIFIED** |
+| **Frontend Production Build** | `frontend/dist` | **REAL** | YES (`npm run build` 100% clean) | None | LOW | Verify responsive mobile layouts and accessibility | **VERIFIED** |

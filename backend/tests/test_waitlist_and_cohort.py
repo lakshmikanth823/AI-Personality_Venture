@@ -58,6 +58,7 @@ def test_beta_cohort_cap_enforcement_at_signup(monkeypatch):
     db.close()
 
     monkeypatch.setattr(settings, "BETA_COHORT_CAP", current_count)
+    monkeypatch.setattr(settings, "APP_ENV", "staging")  # enable capacity enforcement (bypassed in "test" env)
 
     tag = uuid.uuid4().hex[:6]
     # Normal user signup should be rejected with 403 Forbidden

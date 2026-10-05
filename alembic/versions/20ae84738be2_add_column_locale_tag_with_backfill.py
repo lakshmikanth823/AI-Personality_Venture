@@ -15,8 +15,12 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
-    with op.batch_alter_table('profiles', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('locale_tag', sa.String(length=16), nullable=True))
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    cols = [c['name'] for c in insp.get_columns('profiles')]
+    if 'locale_tag' not in cols:
+        with op.batch_alter_table('profiles', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('locale_tag', sa.String(length=16), nullable=True))
 
     # Real data backfill for existing rows
     op.execute("UPDATE profiles SET locale_tag = 'en_IN' WHERE locale_tag IS NULL")

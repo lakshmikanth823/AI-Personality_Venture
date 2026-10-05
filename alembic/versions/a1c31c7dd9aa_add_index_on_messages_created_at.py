@@ -15,8 +15,12 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
-    with op.batch_alter_table('messages', schema=None) as batch_op:
-        batch_op.create_index('ix_messages_created_at', ['created_at'], unique=False)
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    indexes = [ix['name'] for ix in insp.get_indexes('messages')]
+    if 'ix_messages_created_at' not in indexes:
+        with op.batch_alter_table('messages', schema=None) as batch_op:
+            batch_op.create_index('ix_messages_created_at', ['created_at'], unique=False)
 
 def downgrade() -> None:
     with op.batch_alter_table('messages', schema=None) as batch_op:

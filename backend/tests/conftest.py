@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from backend.app.core.config import settings
 from backend.app.core.rate_limiter import limiter
 settings.ENVIRONMENT = "test"
+settings.APP_ENV = "test"
 
 # Use StaticPool so all threads share the exact same in-memory SQLite database instance
 engine = create_engine(

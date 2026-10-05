@@ -42,15 +42,24 @@ class AnalyticsEngine:
     def calculate_wmcr(self) -> int:
         """
         Weekly Meaningful Character Relationships (WMCR):
-        Unique users with at least 3 interactions within the last 7 days.
+        Unique, non-deleted users with at least 3 interactions within the rolling 7-day
+        window anchored to the IST midnight boundary.
         """
-        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-        
-        # Count user messages grouped by user_id
+        ist = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(ist)
+        seven_days_ago_ist_midnight = (now_ist - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+        seven_days_ago_utc = seven_days_ago_ist_midnight.astimezone(timezone.utc)
+
+        # Count user messages grouped by user_id, strictly filtering for active users
         active_counts = (
             self.db.query(Conversation.user_id, func.count(Message.id).label("interaction_count"))
             .join(Message, Message.conversation_id == Conversation.id)
-            .filter(Message.created_at >= seven_days_ago, Message.role == "user")
+            .join(User, User.id == Conversation.user_id)
+            .filter(
+                Message.created_at >= seven_days_ago_utc.replace(tzinfo=None),
+                Message.role == "user",
+                User.is_active == True
+            )
             .group_by(Conversation.user_id)
             .having(func.count(Message.id) >= 3)
             .all()

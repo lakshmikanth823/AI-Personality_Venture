@@ -10,6 +10,10 @@ from backend.app.services.persona_engine import KALYAN_CONSTITUTION
 from backend.app.core.security import get_password_hash
 from fastapi.testclient import TestClient
 
+from backend.app.core.config import settings
+from backend.app.core.rate_limiter import limiter
+settings.ENVIRONMENT = "test"
+
 # Use StaticPool so all threads share the exact same in-memory SQLite database instance
 engine = create_engine(
     "sqlite://",
@@ -67,6 +71,7 @@ def db_session():
 
 @pytest.fixture(scope="function")
 def client(db_session):
+    limiter.reset()
     def override_get_db():
         try:
             yield db_session
@@ -77,3 +82,4 @@ def client(db_session):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+    limiter.reset()

@@ -2,11 +2,14 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from backend.app.core.config import settings
 from backend.app.core.database import get_db
 from backend.app.models.conversation import Conversation, Message
 from backend.app.models.user import User, UserRole
 from backend.app.models.character import CharacterLore
+from backend.app.models.analytics import CostEvent
 from backend.app.schemas.chat import ChatRequest, ChatResponse, ConversationDetail, MessageItem
 from backend.app.api.deps import get_current_user_optional, get_current_user
 from backend.app.services.persona_engine import PersonaEngine
@@ -43,14 +46,36 @@ async def send_message(
     entitlement = subscription_engine.get_user_entitlement(user_id if current_user else "guest_user")
     daily_limit = entitlement.get("daily_message_limit", 25)
 
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    # Timezone boundary: User quotas reset at IST midnight (Asia/Kolkata, UTC+05:30)
+    try:
+        import zoneinfo
+        ist_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
+    except Exception:
+        from datetime import timedelta
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(ist_tz)
+    today_ist_midnight = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start_utc = today_ist_midnight.astimezone(timezone.utc).replace(tzinfo=None)
+
+    # Global Daily Cost Budget Ceiling Guard (G-10)
+    daily_cost_accumulated = (
+        db.query(func.coalesce(func.sum(CostEvent.amount_usd), 0.0))
+        .filter(CostEvent.created_at >= today_start_utc)
+        .scalar()
+    )
+    if daily_cost_accumulated >= settings.DAILY_COST_BUDGET_USD:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Daily system inference budget cap (${settings.DAILY_COST_BUDGET_USD:.2f} USD) reached. Free generation paused until IST midnight."
+        )
+
     today_count = (
         db.query(Message)
         .join(Conversation, Conversation.id == Message.conversation_id)
         .filter(
             Conversation.user_id == (user_id if current_user else "guest_user"),
             Message.role == "user",
-            Message.created_at >= today_start
+            Message.created_at >= today_start_utc
         )
         .count()
     )

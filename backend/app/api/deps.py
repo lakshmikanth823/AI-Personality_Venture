@@ -44,12 +44,25 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
-def require_role(roles: list[UserRole]):
-    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+def require_role(roles: list[UserRole], require_mfa: bool = True):
+    def role_checker(
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
+        current_user: User = Depends(get_current_user)
+    ) -> User:
         if current_user.role not in roles and current_user.role != UserRole.ADMIN:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to perform this operational action"
             )
+        # MFA enforcement for administrative and operational roles
+        if require_mfa and current_user.role in [UserRole.OPERATOR, UserRole.ADMIN]:
+            token = credentials.credentials if credentials else ""
+            payload = decode_access_token(token) or {}
+            mfa_authed = payload.get("mfa_authenticated", False)
+            if current_user.mfa_enabled and not mfa_authed:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="MFA authentication required. Please verify with your authenticator app."
+                )
         return current_user
     return role_checker

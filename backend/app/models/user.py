@@ -20,6 +20,9 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     personalization_enabled = Column(Boolean, default=True, nullable=False) # Privacy control
+    mfa_secret = Column(String(64), nullable=True)
+    mfa_enabled = Column(Boolean, default=False, nullable=False)
+    must_change_password = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
     profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")

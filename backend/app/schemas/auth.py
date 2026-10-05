@@ -16,6 +16,7 @@ class UserLogin(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user_id: str
     username: str
@@ -23,6 +24,9 @@ class Token(BaseModel):
     mfa_required: bool = False
     mfa_authenticated: bool = False
     must_change_password: bool = False
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: Optional[str] = None
 
 class MFASetupResponse(BaseModel):
     secret: str

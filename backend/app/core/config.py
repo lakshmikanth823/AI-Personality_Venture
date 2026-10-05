@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "super-secret-key-kalyan-personality-venture-production-ready-2026")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15 # 15 minutes (short-lived)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7 # 7 days
     ALGORITHM: str = "HS256"
     ADMIN_BOOTSTRAP_PASSWORD: Optional[str] = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", None)
     OPERATOR_BOOTSTRAP_PASSWORD: Optional[str] = os.getenv("OPERATOR_BOOTSTRAP_PASSWORD", None)

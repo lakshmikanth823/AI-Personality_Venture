@@ -1,22 +1,26 @@
 import uuid
 import pyotp
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.core.config import settings
-from backend.app.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
+from backend.app.core.security import (
+    verify_password, get_password_hash, create_access_token, decode_access_token,
+    create_refresh_token, decode_refresh_token
+)
 from backend.app.models.user import User, Profile, UserRole
 from backend.app.models.safety import AuditLog
 from backend.app.schemas.auth import (
     UserSignup, UserLogin, Token, UserProfile,
-    MFASetupResponse, MFAVerifyRequest, ChangePasswordRequest
+    MFASetupResponse, MFAVerifyRequest, ChangePasswordRequest, RefreshTokenRequest
 )
 from backend.app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=Token)
-def signup(data: UserSignup, db: Session = Depends(get_db)):
+def signup(data: UserSignup, response: Response, db: Session = Depends(get_db)):
     # 1. DPDP Act 2023 Consent Enforcement
     if not data.consent_given:
         raise HTTPException(
@@ -88,9 +92,20 @@ def signup(data: UserSignup, db: Session = Depends(get_db)):
     db.add(audit_consent)
     db.commit()
 
-    token = create_access_token(data={"sub": user_id, "role": role.value, "mfa_authenticated": True})
+    access_token = create_access_token(data={"sub": user_id, "role": role.value, "mfa_authenticated": True})
+    refresh_token = create_refresh_token(data={"sub": user_id, "role": role.value})
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
+    )
+
     return Token(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
         user_id=user_id,
         username=new_user.username,
@@ -101,7 +116,7 @@ def signup(data: UserSignup, db: Session = Depends(get_db)):
     )
 
 @router.post("/login", response_model=Token)
-def login(data: UserLogin, db: Session = Depends(get_db)):
+def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(
         (User.email == data.email_or_username) | (User.username == data.email_or_username)
     ).first()
@@ -131,20 +146,88 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
         # Standard user without MFA configured
         is_mfa_authenticated = True
 
-    token = create_access_token(data={
+    access_token = create_access_token(data={
         "sub": user.id,
         "role": user.role.value,
         "mfa_authenticated": is_mfa_authenticated
     })
+    refresh_token = None
+    if is_mfa_authenticated:
+        refresh_token = create_refresh_token(data={"sub": user.id, "role": user.role.value})
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            samesite="lax",
+            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
+        )
 
     return Token(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
         user_id=user.id,
         username=user.username,
         role=user.role.value,
         mfa_required=mfa_required and not is_mfa_authenticated,
         mfa_authenticated=is_mfa_authenticated,
+        must_change_password=user.must_change_password
+    )
+
+@router.post("/refresh", response_model=Token)
+def refresh_token_endpoint(
+    request: Request,
+    response: Response,
+    data: Optional[RefreshTokenRequest] = None,
+    db: Session = Depends(get_db)
+):
+    token_str = None
+    if data and data.refresh_token:
+        token_str = data.refresh_token
+    elif "refresh_token" in request.cookies:
+        token_str = request.cookies["refresh_token"]
+
+    if not token_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token missing from cookie or request body."
+        )
+
+    payload = decode_refresh_token(token_str)
+    if not payload or "sub" not in payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token."
+        )
+
+    user_id = payload["sub"]
+    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive."
+        )
+
+    new_access_token = create_access_token(data={"sub": user.id, "role": user.role.value, "mfa_authenticated": True})
+    new_refresh_token = create_refresh_token(data={"sub": user.id, "role": user.role.value})
+
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
+    )
+
+    return Token(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        token_type="bearer",
+        user_id=user.id,
+        username=user.username,
+        role=user.role.value,
+        mfa_required=False,
+        mfa_authenticated=True,
         must_change_password=user.must_change_password
     )
 
@@ -204,6 +287,7 @@ def setup_mfa(
 @router.post("/mfa/verify", response_model=Token)
 def verify_mfa(
     data: MFAVerifyRequest,
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -223,14 +307,24 @@ def verify_mfa(
     current_user.mfa_enabled = True
     db.commit()
 
-    token = create_access_token(data={
+    access_token = create_access_token(data={
         "sub": current_user.id,
         "role": current_user.role.value,
         "mfa_authenticated": True
     })
+    refresh_token = create_refresh_token(data={"sub": current_user.id, "role": current_user.role.value})
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
+    )
 
     return Token(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
         user_id=current_user.id,
         username=current_user.username,

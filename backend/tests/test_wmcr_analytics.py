@@ -35,7 +35,7 @@ def test_wmcr_exact_rules(db):
     
     # 1. User A: Valid qualifying user (3 messages within 3 days)
     u_a_id = f"wmcr-a-{uuid.uuid4().hex}"
-    user_a = User(id=u_a_id, email=f"{u_a_id}@kalyan.ai", username=f"ua_{u_a_id[:8]}", hashed_password="pw", is_active=True)
+    user_a = User(id=u_a_id, email=f"{u_a_id}@kalyan.ai", username=f"ua_{uuid.uuid4().hex[:8]}", hashed_password="pw", is_active=True)
     conv_a = Conversation(id=f"conv-{u_a_id}", user_id=u_a_id, title="Career Advice")
     db.add_all([user_a, conv_a])
     
@@ -51,7 +51,7 @@ def test_wmcr_exact_rules(db):
         
     # 2. User B: Under-threshold user (only 2 messages)
     u_b_id = f"wmcr-b-{uuid.uuid4().hex}"
-    user_b = User(id=u_b_id, email=f"{u_b_id}@kalyan.ai", username=f"ub_{u_b_id[:8]}", hashed_password="pw", is_active=True)
+    user_b = User(id=u_b_id, email=f"{u_b_id}@kalyan.ai", username=f"ub_{uuid.uuid4().hex[:8]}", hashed_password="pw", is_active=True)
     conv_b = Conversation(id=f"conv-{u_b_id}", user_id=u_b_id, title="Roast Me")
     db.add_all([user_b, conv_b])
     
@@ -67,7 +67,7 @@ def test_wmcr_exact_rules(db):
         
     # 3. User C: Deleted/Inactive user (has 5 messages, but is_active=False)
     u_c_id = f"wmcr-c-{uuid.uuid4().hex}"
-    user_c = User(id=u_c_id, email=f"{u_c_id}@kalyan.ai", username=f"uc_{u_c_id[:8]}", hashed_password="pw", is_active=False)
+    user_c = User(id=u_c_id, email=f"{u_c_id}@kalyan.ai", username=f"uc_{uuid.uuid4().hex[:8]}", hashed_password="pw", is_active=False)
     conv_c = Conversation(id=f"conv-{u_c_id}", user_id=u_c_id, title="Old Chat")
     db.add_all([user_c, conv_c])
     
@@ -83,7 +83,7 @@ def test_wmcr_exact_rules(db):
         
     # 4. User D: Expired interaction user (4 messages, but all 10 days ago)
     u_d_id = f"wmcr-d-{uuid.uuid4().hex}"
-    user_d = User(id=u_d_id, email=f"{u_d_id}@kalyan.ai", username=f"ud_{u_d_id[:8]}", hashed_password="pw", is_active=True)
+    user_d = User(id=u_d_id, email=f"{u_d_id}@kalyan.ai", username=f"ud_{uuid.uuid4().hex[:8]}", hashed_password="pw", is_active=True)
     conv_d = Conversation(id=f"conv-{u_d_id}", user_id=u_d_id, title="Expired Chat")
     db.add_all([user_d, conv_d])
     
@@ -99,7 +99,7 @@ def test_wmcr_exact_rules(db):
         
     # 5. User E: Multiple conversations (Deduplication test: 2 conversations with 3 messages each)
     u_e_id = f"wmcr-e-{uuid.uuid4().hex}"
-    user_e = User(id=u_e_id, email=f"{u_e_id}@kalyan.ai", username=f"ue_{u_e_id[:8]}", hashed_password="pw", is_active=True)
+    user_e = User(id=u_e_id, email=f"{u_e_id}@kalyan.ai", username=f"ue_{uuid.uuid4().hex[:8]}", hashed_password="pw", is_active=True)
     conv_e1 = Conversation(id=f"conv-e1-{u_e_id}", user_id=u_e_id, title="Thread 1")
     conv_e2 = Conversation(id=f"conv-e2-{u_e_id}", user_id=u_e_id, title="Thread 2")
     db.add_all([user_e, conv_e1, conv_e2])

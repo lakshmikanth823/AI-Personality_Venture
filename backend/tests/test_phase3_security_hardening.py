@@ -285,3 +285,8 @@ def test_daily_cost_budget_ceiling(client, db_session):
         assert "Daily system inference budget cap" in res.json()["detail"]
     finally:
         settings.DAILY_COST_BUDGET_USD = orig_budget
+        try:
+            db_session.query(CostEvent).delete()
+            db_session.commit()
+        except Exception:
+            db_session.rollback()

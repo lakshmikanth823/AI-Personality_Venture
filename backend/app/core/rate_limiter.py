@@ -146,7 +146,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         client_ip = get_client_ip(request, behind_trusted_proxy=self.behind_trusted_proxy)
-        if client_ip == "testclient" and getattr(settings, "APP_ENV", "") == "test":
+        if getattr(settings, "APP_ENV", "") == "test" or getattr(settings, "ENVIRONMENT", "") == "test":
             req_limit = 10000
         else:
             req_limit = limiter.get_limit_for_path(path)

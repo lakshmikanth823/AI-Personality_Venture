@@ -3,6 +3,7 @@ import uuid
 from typing import Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from backend.app.models.safety import ModerationResult, AuditLog
+from backend.app.services.semantic_safety import SemanticSafetyClassifier
 
 # Regex rules for prompt injection and jailbreaks
 PROMPT_INJECTION_PATTERNS = [
@@ -49,6 +50,7 @@ TIER_1_PATTERNS = [
 class SafetyEngine:
     def __init__(self, db: Session):
         self.db = db
+        self.semantic_classifier = SemanticSafetyClassifier()
 
     def evaluate_text(self, text: str, entity_type: str = "message", entity_id: str = "") -> Dict[str, Any]:
         text_clean = text.strip()
@@ -106,7 +108,20 @@ class SafetyEngine:
                     action="allow"
                 )
 
-        # 5. Tier 0 - Standard clean interaction
+        # 5. Hybrid Semantic Evaluation for Evasions / Obfuscations / Plural Variations
+        semantic_res = self.semantic_classifier.evaluate_semantic(text_clean)
+        if semantic_res:
+            return self._record_and_return(
+                entity_type=entity_type,
+                entity_id=entity_id,
+                policy_flag=semantic_res["policy_flag"],
+                risk_tier=semantic_res["risk_tier"],
+                risk_score=semantic_res["risk_score"],
+                reasoning=semantic_res["reasoning"],
+                action=semantic_res["action"]
+            )
+
+        # 6. Tier 0 - Standard clean interaction
         return self._record_and_return(
             entity_type=entity_type,
             entity_id=entity_id,

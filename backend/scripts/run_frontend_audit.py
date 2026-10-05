@@ -27,6 +27,22 @@ PORT = 8765
 BASE_URL = f"http://127.0.0.1:{PORT}"
 
 def start_background_server():
+    from backend.app.core.database import SessionLocal
+    from backend.app.models.analytics import CostEvent
+    from backend.app.models.conversation import Message, Conversation
+    from backend.app.core.rate_limiter import limiter
+    limiter.reset()
+    db = SessionLocal()
+    try:
+        db.query(CostEvent).delete()
+        db.query(Message).delete()
+        db.query(Conversation).delete()
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
     config = uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning")
     server = uvicorn.Server(config)
     t = threading.Thread(target=server.run, daemon=True)

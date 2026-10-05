@@ -23,15 +23,42 @@
 
 ---
 
-## 🌟 Executive Thesis
+## 📌 What is Kalyan AI?
 
-**Kalyan** is a **social-first AI character media property** designed with cultural depth, psychological boundaries, and emotional authenticity.
+**Kalyan** is a **social-first, culturally authentic AI character media property** and fullstack intelligent operating system. Unlike generic, robotic corporate assistants that sugarcoat every response with polite fluff, Kalyan is designed as the **"brutally honest Indian internet friend"**:
 
-Rather than acting as a subservient, generic chat assistant, Kalyan is an observant, street-smart 25-year-old friend from Hyderabad. He combines razor-sharp wit, Ameerpet tech grit, code-switching (*Hinglish + Telugu idioms*), and tough love to deliver practical reality checks on careers, dating, money, and modern Indian life.
+- **Street-Smart & Culturally Fluent**: Rooted in Ameerpet tech grit, Irani chai philosophy, and Cyberabad hustle. Code-switches naturally between Indian English, Hinglish, and selective Hyderabadi Telugu idioms (*"Arre babu", "chudu", "sorted", "jugaad"*).
+- **Tough Love with Purpose**: Provides witty, sarcastic, yet genuinely constructive and practical reality checks on careers, dating, startups, money, and societal pressure.
+- **Autonomous Media Engine**: Operates both as a live conversational web application and as an autonomous social property capable of ingesting mentions, drafting content, generating shareable meme cards, and broadcasting across social channels under human governance.
 
 ```text
 CHARACTER  ──►  AUDIENCE  ──►  COMMUNITY  ──►  LORE  ──►  INTERACTION DATA  ──►  CREATOR ECOSYSTEM  ──►  CHARACTER IP
 ```
+
+---
+
+## ⚡ What Can It Do?
+
+- 💬 **Brutally Honest Conversational AI**: Delivers sharp, culturally nuanced, and practical advice on real-world dilemmas without corporate pretense.
+- 🧠 **4-Level Contextual & Long-Term Memory**: Recalls past conversations, career trajectory, preferences, and inside jokes across sessions while guaranteeing DPDP Act 2023 privacy rights and preventing memory poisoning.
+- 🎨 **Dynamic Viral Share Card Engine**: Automatically renders high-impact visual quote cards with stylized gradients (*Ameerpet Chai, Cyberabad Neon, Filter Coffee Vintage*) for one-click sharing to X, Instagram, and WhatsApp.
+- 📡 **Multi-Platform Social Media Ingestion & Outbox**: Ingests incoming mentions from WhatsApp Cloud API, Instagram, and X (Twitter), generates contextual draft replies, and routes them through a human review console and transactional outbox.
+- 🛡️ **Multi-Tier AI Safety & Crisis Routing**: Employs hybrid regex and semantic AI classifiers to intercept jailbreak attempts, while seamlessly routing self-harm distress triggers to India's **Tele-MANAS (14416)** and **Kiran (1800-599-0019)** helplines.
+- 🛑 **Sub-Millisecond Emergency Kill Switch**: Instantly freezes external broadcasts, autonomous background workers, and live inference with zero packet leakage during operational incidents.
+- 💳 **Payment Sandbox & Subscription Engine**: Features Razorpay/Stripe HMAC SHA-256 verified webhooks, idempotent replay defenses, and instant user entitlement upgrades (₹49 Single Roast to ₹149 Fan Pass).
+- 📊 **Real-Time Observability & Economics**: Exports Prometheus `/metrics`, tracks Weekly Meaningful Character Relationships (WMCR), monitors per-token GPU spend in PostgreSQL, and alerts ops via Slack and Email.
+
+---
+
+## 🎯 Best Use Cases & Practical Applications
+
+| Use Case | How Kalyan Delivers Value | Real-World Example |
+| :--- | :--- | :--- |
+| **1. Unfiltered Career & Resume Roasts** | Tears down fluffy buzzwords and provides grounded, actionable positioning advice for developers and job seekers. | *"Review my resume: 6 internships in 1 year, 15 Udemy certificates."* $\to$ *"Guru, you are collecting certificates like ration stamps. Build one production project that real users touch."* |
+| **2. Startup & Pitch Reality Checks** | Strips away founder vanity metrics to evaluate true product-market fit, unit economics, and distribution moats. | *"Should I build an on-demand Chai delivery app?"* $\to$ *"Who pays ₹80 delivery fee on a ₹10 cutting chai? Dunzo exists and tapris are on every corner. Fix your unit economics."* |
+| **3. AI Creator IP & Social Media Automation** | Powers autonomous character accounts on X, Instagram, YouTube, and WhatsApp with safe human-in-the-loop review. | Ingesting trending tech controversies and publishing on-brand commentary, video short scripts, and relatable memes. |
+| **4. Anti-Overthinking & Mental Clarity** | Acts as a grounded, pragmatic sounding board when overwhelmed by parental comparisons or societal pressure (*"Sharma ji ka beta"*). | *"My relatives keep asking why I haven't cracked FAANG yet."* $\to$ *"Sharma ji's son isn't paying your bills. Focus on your own skills and shipping code, not someone else's highlight reel."* |
+| **5. Hyper-Local Cultural Community Engagement** | Connects with the Indian diaspora and Gen-Z through authentic cultural fluency that generic Western LLMs cannot replicate. | Irani chai banter, Ameerpet tech institute jokes, startup grind observations, and localized humor. |
 
 ---
 

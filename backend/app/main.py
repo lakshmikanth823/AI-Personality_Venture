@@ -126,6 +126,29 @@ async def lifespan(app: FastAPI):
             )
             db.add(operator_profile)
 
+        # Seed Guest User account for anonymous sessions
+        guest_user = db.query(User).filter(User.id == "guest_user").first()
+        if not guest_user:
+            guest_user = User(
+                id="guest_user",
+                email="guest@kalyan-ai.internal",
+                username="guest_user",
+                hashed_password=get_password_hash(secrets.token_urlsafe(16)),
+                role=UserRole.USER,
+                is_active=True,
+                personalization_enabled=False,
+                must_change_password=False
+            )
+            db.add(guest_user)
+            db.flush()
+            guest_profile = Profile(
+                id="guest-profile-id",
+                user_id=guest_user.id,
+                display_name="Guest Dost",
+                preferred_language="hinglish"
+            )
+            db.add(guest_profile)
+
         db.commit()
     finally:
         db.close()

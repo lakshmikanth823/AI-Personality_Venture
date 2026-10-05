@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # AI Providers & Model Configuration
     DEFAULT_PROVIDER: str = os.getenv("DEFAULT_PROVIDER", "mock") # "mock" | "gemini" | "openai" | "anthropic"
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", None)
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY", None)
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY", None)
     

@@ -84,14 +84,30 @@ def run_backup_restore_drill():
     backup_dir.mkdir(parents=True, exist_ok=True)
     backup_file = backup_dir / f"kalyan_backup_{drill_tag}.sqlite"
     
-    # Find active sqlite database path
+    # Setup source sqlite database for hot-backup drill
     db_url = str(engine.url)
-    if "sqlite:///" in db_url:
-        source_path = db_url.replace("sqlite:///", "")
+    if "sqlite:///" in db_url and Path(db_url.replace("sqlite:///", "")).exists():
+        source_path = Path(db_url.replace("sqlite:///", ""))
     else:
-        source_path = "backend/data/kalyan.db"
+        source_path = backup_dir / f"source_{drill_tag}.sqlite"
+        if source_path.exists():
+            source_path.unlink()
+        init_conn = sqlite3.connect(str(source_path))
+        init_conn.execute("CREATE TABLE users (id TEXT, email TEXT, username TEXT, hashed_password TEXT, role TEXT)")
+        init_conn.execute("CREATE TABLE memories (id TEXT, user_id TEXT, memory_type TEXT, key TEXT, value TEXT, category TEXT, confidence REAL, created_at TEXT)")
+        init_conn.execute("CREATE TABLE content_candidates (id TEXT, source_channel TEXT, pillar TEXT, format TEXT, raw_prompt TEXT, candidate_text TEXT, risk_tier TEXT, status TEXT)")
         
-    src_conn = sqlite3.connect(source_path)
+        # Populate source data
+        for u in db.query(User).all():
+            init_conn.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?)", (u.id, u.email, u.username, u.hashed_password, str(u.role)))
+        for m in all_memories:
+            init_conn.execute("INSERT INTO memories VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (m.id, m.user_id, str(m.memory_type), m.key, m.value, m.category, m.confidence, str(m.created_at)))
+        for c in db.query(ContentCandidate).all():
+            init_conn.execute("INSERT INTO content_candidates VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (c.id, c.source_channel, c.pillar, c.format, c.raw_prompt, c.candidate_text, c.risk_tier, c.status))
+        init_conn.commit()
+        init_conn.close()
+        
+    src_conn = sqlite3.connect(str(source_path))
     dst_conn = sqlite3.connect(str(backup_file))
     
     print(f"[*] Executing live sqlite online backup -> {backup_file}...")

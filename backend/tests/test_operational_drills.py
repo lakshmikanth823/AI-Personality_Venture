@@ -68,12 +68,12 @@ def test_approval_concurrency_race(db_session):
     
     # Override auth dependency for tests using client headers
     # Simulate concurrent HTTP approval requests via ThreadPoolExecutor
-    def approve_attempt(op_user: User):
+    def approve_attempt(op_user_id: str):
         # We invoke ContentEngine approve_and_queue directly across threads with separate sessions
         db_thread = SessionLocal()
         engine = ContentEngine(db_thread)
         try:
-            res = engine.approve_and_queue(candidate_id, operator_id=op_user.id)
+            res = engine.approve_and_queue(candidate_id, operator_id=op_user_id)
             db_thread.close()
             return {"status": 200, "data": res}
         except ValueError as e:
@@ -81,8 +81,8 @@ def test_approval_concurrency_race(db_session):
             return {"status": 409, "error": str(e)}
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        f1 = executor.submit(approve_attempt, user1)
-        f2 = executor.submit(approve_attempt, user2)
+        f1 = executor.submit(approve_attempt, op1_id)
+        f2 = executor.submit(approve_attempt, op2_id)
         r1 = f1.result()
         r2 = f2.result()
 

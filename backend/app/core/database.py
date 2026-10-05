@@ -4,7 +4,9 @@ from backend.app.core.config import settings
 
 # Normalize database URL for synchronous SQLAlchemy engine
 sync_db_url = settings.DATABASE_URL
-if sync_db_url.startswith("postgresql+asyncpg://"):
+if sync_db_url.startswith("postgresql://"):
+    sync_db_url = sync_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+elif sync_db_url.startswith("postgresql+asyncpg://"):
     sync_db_url = sync_db_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
 
 connect_args = {}

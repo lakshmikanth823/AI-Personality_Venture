@@ -279,9 +279,9 @@ class LiveGeminiProvider(AbstractModelProvider):
     """
     Live Gemini integration when GEMINI_API_KEY is available.
     """
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model_name: Optional[str] = None):
         self.api_key = api_key
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = model_name or getattr(settings, "GEMINI_MODEL", "gemini-3.1-flash-lite")
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
 
     async def generate(
@@ -302,34 +302,46 @@ class LiveGeminiProvider(AbstractModelProvider):
                 "parts": [{"text": m.get("content", "")}]
             })
             
-        url = f"{self.base_url}/{self.model_name}:generateContent?key={self.api_key}"
-        payload = {
-            "system_instruction": {"parts": [{"text": system_prompt}]},
-            "contents": contents,
-            "generationConfig": {
-                "temperature": temperature,
-                "maxOutputTokens": max_tokens
+        candidate_models = [self.model_name, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+        # deduplicate maintaining order
+        seen = set()
+        model_list = [m for m in candidate_models if not (m in seen or seen.add(m))]
+
+        last_err = None
+        for model in model_list:
+            url = f"{self.base_url}/{model}:generateContent?key={self.api_key}"
+            payload = {
+                "system_instruction": {"parts": [{"text": system_prompt}]},
+                "contents": contents,
+                "generationConfig": {
+                    "temperature": temperature,
+                    "maxOutputTokens": max_tokens
+                }
             }
-        }
-        
-        async with httpx.AsyncClient(timeout=25.0) as client:
-            resp = await client.post(url, json=payload)
-            resp.raise_for_status()
-            data = resp.json()
+            try:
+                async with httpx.AsyncClient(timeout=20.0) as client:
+                    resp = await client.post(url, json=payload)
+                    resp.raise_for_status()
+                    data = resp.json()
 
-        latency = (time.perf_counter() - start_time) * 1000
-        content = data["candidates"][0]["content"]["parts"][0]["text"]
-        usage = data.get("usageMetadata", {})
-        tokens_in = usage.get("promptTokenCount", 100)
-        tokens_out = usage.get("candidatesTokenCount", 100)
+                latency = (time.perf_counter() - start_time) * 1000
+                content = data["candidates"][0]["content"]["parts"][0]["text"]
+                usage = data.get("usageMetadata", {})
+                tokens_in = usage.get("promptTokenCount", 100)
+                tokens_out = usage.get("candidatesTokenCount", 100)
 
-        return ModelResponse(
-            content=content,
-            tokens_input=tokens_in,
-            tokens_output=tokens_out,
-            latency_ms=round(latency, 2),
-            model_name=self.model_name
-        )
+                return ModelResponse(
+                    content=content,
+                    tokens_input=tokens_in,
+                    tokens_output=tokens_out,
+                    latency_ms=round(latency, 2),
+                    model_name=model
+                )
+            except Exception as e:
+                last_err = e
+                continue
+
+        raise last_err or RuntimeError("All Gemini model endpoints failed.")
 
     async def moderate(self, text: str) -> Dict[str, Any]:
         # Fallback to local deterministic classifier

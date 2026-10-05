@@ -22,6 +22,7 @@ from backend.app.services.model_provider import get_model_provider
 from backend.app.services.analytics_engine import AnalyticsEngine
 from backend.app.services.experiment_engine import ExperimentEngine
 from backend.app.services.subscription_engine import SubscriptionEngine
+from backend.app.services.kill_switch import KillSwitchManager
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -31,6 +32,13 @@ async def send_message(
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
+    # -1. GLOBAL EMERGENCY KILL SWITCH GUARD
+    if KillSwitchManager(db).is_kill_switch_active() or getattr(settings, "KILL_SWITCH_ACTIVE", False):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Emergency Kill Switch is currently active. Live inference and message processing are temporarily paused."
+        )
+
     persona_engine = PersonaEngine(db)
     memory_engine = MemoryEngine(db)
     safety_engine = SafetyEngine(db)

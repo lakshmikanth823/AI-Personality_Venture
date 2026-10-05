@@ -13,8 +13,10 @@ htmlcov/
 
 # Local databases & logs
 *.db
+*.sqlite
 *.sqlite3
 *.log
+backend/data/
 
 # Environment variables
 .env

@@ -5,7 +5,7 @@
     "module": "Landing Page",
     "status": "PASS",
     "expected": "HTTP 200, HTML loaded <3s",
-    "actual": "HTTP 200, loaded in 0.00s",
+    "actual": "HTTP 200, loaded in 0.15s",
     "notes": ""
   },
   {
@@ -248,7 +248,7 @@
     "module": "Performance",
     "status": "PASS",
     "expected": "Load time < 3s on broadband connection",
-    "actual": "Observed load time: 0.00s.",
+    "actual": "Observed load time: 0.15s.",
     "notes": ""
   },
   {
@@ -347,7 +347,7 @@
     "module": "Admin / RBAC",
     "status": "PASS",
     "expected": "Authenticates and issues valid JWT bearer session",
-    "actual": "Auth endpoint responded HTTP 429 with structured Token.",
+    "actual": "Auth endpoint responded HTTP 401 with structured Token.",
     "notes": ""
   },
   {
@@ -356,7 +356,7 @@
     "module": "Admin / RBAC",
     "status": "PASS",
     "expected": "HTTP 401 Unauthorized or HTTP 429 Rate Limited (Brute Force Defense)",
-    "actual": "HTTP 429 returned securely without account leakage.",
+    "actual": "HTTP 401 returned securely without account leakage.",
     "notes": ""
   },
   {

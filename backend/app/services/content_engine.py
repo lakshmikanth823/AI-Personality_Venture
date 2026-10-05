@@ -3,7 +3,8 @@ import random
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from backend.app.models.content import ContentCandidate
+from backend.app.models.content import ContentCandidate, Approval, PublishedAction
+import json
 from backend.app.services.safety_engine import SafetyEngine
 
 SAMPLE_OBSERVATIONS = [
@@ -90,14 +91,51 @@ class ContentEngine:
         if not candidate:
             raise ValueError(f"Candidate {candidate_id} not found")
 
+        # Concurrency race check: prevent duplicate simultaneous approvals
+        if candidate.status in ["approved", "published"]:
+            raise ValueError(f"Candidate {candidate_id} has already been approved or published.")
+
+        orig_text = candidate.candidate_text
         if final_text:
             candidate.candidate_text = final_text
 
         candidate.status = "approved"
+
+        # 1. Record immutable audit approval record in the same transaction
+        approval = Approval(
+            id=str(uuid.uuid4()),
+            candidate_id=candidate.id,
+            operator_id=operator_id,
+            action="approved",
+            original_text=orig_text,
+            final_text=candidate.candidate_text,
+            reason="Approved for publication via operational console",
+            created_at=datetime.now(timezone.utc)
+        )
+        self.db.add(approval)
+
+        # 2. Outbox Pattern: atomically enqueue durable published_action with idempotency key
+        outbox_entry = PublishedAction(
+            id=f"outbox-{candidate.id}",
+            candidate_id=candidate.id,
+            channel=candidate.source_channel,
+            status="queued",
+            payload_json=json.dumps({
+                "text": candidate.candidate_text,
+                "channel": candidate.source_channel,
+                "pillar": candidate.pillar,
+                "operator_id": operator_id
+            }),
+            retry_count=0,
+            published_at=datetime.now(timezone.utc)
+        )
+        self.db.add(outbox_entry)
         self.db.commit()
+
         return {
             "candidate_id": candidate.id,
             "status": "approved",
+            "outbox_id": outbox_entry.id,
             "text": candidate.candidate_text
         }
 

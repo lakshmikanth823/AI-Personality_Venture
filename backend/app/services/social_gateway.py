@@ -271,3 +271,71 @@ class SocialPublisherService:
             "url": result.get("url"),
             "status": "published"
         }
+
+    def drain_outbox(self, max_batch: int = 10) -> Dict[str, Any]:
+        """
+        Outbox Pattern Worker:
+        Polls durable queued published_actions, enforces kill switch, executes broadcast adapter,
+        and atomically transitions records to published status with external post ID.
+        """
+        import json
+        queued_actions = (
+            self.db.query(PublishedAction)
+            .filter(PublishedAction.status == "queued")
+            .order_by(PublishedAction.published_at.asc())
+            .limit(max_batch)
+            .all()
+        )
+
+        results = {
+            "polled": len(queued_actions),
+            "published": 0,
+            "cancelled": 0,
+            "failed": 0,
+            "items": []
+        }
+
+        for action in queued_actions:
+            # 1. Kill switch check before egress
+            if self.kill_switch_manager.is_kill_switch_active():
+                action.status = "cancelled_by_kill_switch"
+                action.error_message = "Cancelled mid-flight: Emergency Kill Switch is ACTIVE."
+                self.db.commit()
+                results["cancelled"] += 1
+                results["items"].append({"action_id": action.id, "status": action.status})
+                continue
+
+            try:
+                candidate = self.db.query(ContentCandidate).filter(ContentCandidate.id == action.candidate_id).first()
+                if not candidate:
+                    action.status = "failed"
+                    action.error_message = "Candidate record not found"
+                    self.db.commit()
+                    results["failed"] += 1
+                    continue
+
+                adapter = self.adapters.get(action.channel.lower(), self.adapters["x"])
+                publish_res = adapter.publish(candidate.candidate_text)
+
+                action.status = "success"
+                action.external_post_id = publish_res["external_id"]
+                action.payload_json = json.dumps(publish_res)
+                action.published_at = datetime.now(timezone.utc)
+                candidate.status = "published"
+                self.db.commit()
+
+                results["published"] += 1
+                results["items"].append({
+                    "action_id": action.id,
+                    "external_id": publish_res["external_id"],
+                    "status": "published"
+                })
+            except Exception as e:
+                action.retry_count += 1
+                action.status = "failed" if action.retry_count >= 3 else "queued"
+                action.error_message = str(e)
+                self.db.commit()
+                results["failed"] += 1
+
+        return results
+

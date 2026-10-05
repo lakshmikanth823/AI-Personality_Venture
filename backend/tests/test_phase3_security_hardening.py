@@ -250,7 +250,8 @@ def test_prometheus_metrics_endpoint(client):
     assert "kill_switch_active" in text
 
 def test_pii_log_scrubbing():
-    sample_log = "User test.kalyan@gmail.com with phone +919876543210 attempted login with password='SuperSecretPassword123' and api_key='sk-proj-1234567890abcdef'."
+    # dummy fixture for testing PII scrubber
+    sample_log = "User test.kalyan@gmail.com with phone +919876543210 attempted login with password='SuperSecretPassword123' and api_key='mock_dummy_api_key_string'."
     scrubbed = scrub_sensitive_data(sample_log)
     assert "test.kalyan@gmail.com" not in scrubbed
     assert "[REDACTED_EMAIL]" in scrubbed

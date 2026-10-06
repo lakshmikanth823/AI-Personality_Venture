@@ -1,0 +1,20 @@
+{
+  "cohort_size": 50,
+  "simulation_days": 30,
+  "total_messages": 2637,
+  "total_share_cards": 94,
+  "total_memories": 150,
+  "retention": {
+    "day_1_pct": 100.0,
+    "day_7_pct": 42.0,
+    "day_14_pct": 44.0,
+    "day_28_pct": 32.0
+  },
+  "financials": {
+    "single_roast_count": 38,
+    "fan_pass_count": 25,
+    "gross_revenue_inr": 5587.0,
+    "total_llm_cost_inr": 166.13,
+    "net_profit_inr": 5309.13
+  }
+}

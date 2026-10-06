@@ -20,11 +20,14 @@ class SemanticSafetyClassifier:
         normalized = text.lower()
         for char, sub in self.leet_map.items():
             normalized = normalized.replace(char, sub)
+        # Also strip internal punctuation for word-level checks: "d.i.e" -> "die", "k-i-l-l" -> "kill"
+        normalized = re.sub(r'[\.\-\_\!]', '', normalized)
         return normalized
 
     def despace(self, text: str) -> str:
         # Reconnect single-letter spaced words: "k i l l" -> "kill", "i g n o r e" -> "ignore"
-        return re.sub(r'(?<=\b[a-zA-Z])\s+(?=[a-zA-Z]\b)', '', text)
+        cleaned = re.sub(r'[\.\-\_]', ' ', text)
+        return re.sub(r'(?<=\b[a-zA-Z])\s+(?=[a-zA-Z]\b)', '', cleaned)
 
     def check_base64_payloads(self, text: str) -> Optional[str]:
         tokens = re.findall(r'[A-Za-z0-9+/]{8,}={0,2}', text)
@@ -55,7 +58,7 @@ class SemanticSafetyClassifier:
             }
 
         # 2. Despaced or leetspeak self-harm
-        if any(w in normalized_leet for w in ["kill myself", "suicide", "end my life", "hurt myself", "hang myself"]):
+        if any(w in normalized_leet for w in ["kill myself", "killmyself", "suicide", "end my life", "endmylife", "hurt myself", "hurtmyself", "hang myself", "hangmyself", "die"]):
             return {
                 "policy_flag": "self_harm",
                 "risk_tier": "tier_3",

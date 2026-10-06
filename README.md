@@ -3,7 +3,7 @@
 # ☕ Kalyan — The Brutally Honest Indian Internet Friend
 ### Autonomous AI Character Media Property, Fullstack Operating System & Social Engine
 
-[![Pytest Tests](https://img.shields.io/badge/Pytest-173%2F173%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
+[![Pytest Tests](https://img.shields.io/badge/Pytest-176%2F176%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
 [![Launch Gates](https://img.shields.io/badge/Launch%20Gates-20%2F20%20PASS-blue?style=for-the-badge)](docs/PHASE6_LAUNCH_GATE.md)
 [![LLM](https://img.shields.io/badge/Model-Google%20Gemini%203.5%20Flash--Lite-orange?style=for-the-badge&logo=google)](backend/app/services/model_provider.py)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2015%20%2B%20Redis%207-blueviolet?style=for-the-badge&logo=postgresql)](docker-compose.yml)
@@ -223,6 +223,9 @@ All capabilities are accompanied by audited evidence logs in [`docs/EVIDENCE/`](
 | **E-45** | Social Adapters & Outbox Egress | **PASS** | Multi-channel adapters, Meta challenges, outbox kill switch abort |
 | **E-46** | Prometheus Metrics & Alerting | **PASS** | Live `/metrics` scraping, Slack & Email multi-channel alerts |
 | **E-47** | Controlled Beta Cohort Management | **PASS** | Waitlist FIFO queueing, deduplication defense, user onboarding |
+| **E-48** | Live Gemini Quality & Economics Benchmark | **PASS** | Real Gemini 3.5 Flash-Lite: $0.000728/turn, 93.7%–99.6% gross margin |
+| **E-49** | Closed Beta Cohort Simulation (50 Users) | **PASS** | 30-Day organic retention curve, memory accumulation, 95.0% net margin |
+| **E-50** | Multilingual Crisis Interception Matrix | **PASS** | 100% interception of English/Hinglish/slang distress with Tele-MANAS & Kiran |
 
 ---
 
@@ -267,7 +270,7 @@ pip install -r backend/requirements.txt
 python backend/scripts/init_postgres_schema.py
 ```
 
-### 4. Run Automated Test Suite (173/173 Green)
+### 4. Run Automated Test Suite (176/176 Green)
 ```bash
 pytest -v
 ```
@@ -298,7 +301,7 @@ AI-Personality_Venture/
 │   │   ├── schemas/         # Pydantic validation schemas
 │   │   └── services/        # Persona, safety, memory, kill switch, social gateways
 │   ├── scripts/             # Automated verification, load testing & DR drills
-│   └── tests/               # 173 comprehensive pytest regression & QA suites
+│   └── tests/               # 176 comprehensive pytest regression & QA suites
 ├── frontend/
 │   ├── src/                 # React 18 SPA components, hooks & state
 │   └── dist/                # Optimized production frontend build

@@ -38,8 +38,25 @@ class SafetyEngine:
                 action="allow"
             )
 
+        # B07: Legal & Support Inquiries (Child protection laws & helping a suicidal friend)
+        if re.search(r"(?i)\b(?:child\s+abuse\s+reporting\s+laws?|laws?\s+(?:on|regarding|about)\s+child\s+abuse|reporting\s+child\s+abuse)\b", text_clean):
+            return self._record_and_return(
+                entity_type=entity_type, entity_id=entity_id,
+                policy_flag="clean", risk_tier="tier_0", risk_score=0.05,
+                reasoning="Legitimate legal inquiry regarding child protection and mandatory reporting laws.",
+                action="allow"
+            )
+
+        if re.search(r"(?i)\b(?:how\s+(?:can|do)\s+i\s+)?help\s+(?:a\s+)?(?:friend|someone|person|colleague)\s+who\s+(?:wants\s+to\s+commit\s+suicide|is\s+suicidal|wants\s+to\s+die)\b", text_clean):
+            return self._record_and_return(
+                entity_type=entity_type, entity_id=entity_id,
+                policy_flag="clean", risk_tier="tier_0", risk_score=0.05,
+                reasoning="Third-party crisis assistance inquiry.",
+                action="allow"
+            )
+
         # B06: Educational technical explanation of iOS/mobile jailbreaking
-        if re.search(r"(?i)\b(?:what\s+is\s+(?:a\s+)?|explain\s+(?:what\s+(?:a\s+)?is\s+)?|history\s+of\s+)?jailbreak(?:ing)?\s+(?:in|on|for|of)\s+(?:ios|iphone|ipad|android|device|playstation|ps\d|apple)\b", text_clean):
+        if re.search(r"(?i)\b(?:what\s+is\s+(?:a\s+)?|explain\s+(?:what\s+(?:a\s+)?is\s+)?|history\s+of\s+|how\s+(?:do\s+i|to)\s+)?jailbreak(?:ing)?\s+(?:my\s+)?(?:old\s+)?(?:in|on|for|of)?\s*(?:ios|iphone|ipad|android|device|playstation|ps\d|apple)\b", text_clean):
             return self._record_and_return(
                 entity_type=entity_type, entity_id=entity_id,
                 policy_flag="clean", risk_tier="tier_0", risk_score=0.05,
@@ -74,12 +91,12 @@ class SafetyEngine:
                 action="allow"
             )
 
-        # B01: Colloquial idiom 'suicide mission' in startup/business context
-        if re.search(r"(?i)\b(?:startup|project|venture|idea)\s+(?:is\s+a\s+)?suicide\s+mission\b", text_clean):
+        # B01: Colloquial idiom 'suicide mission' in startup/business/gaming context
+        if re.search(r"(?i)\b(?:suicide\s+mission\s+(?:in|for|was|is|lol)|(?:startup|project|venture|idea|game|mission)\s+(?:is\s+a\s+)?suicide\s+mission|committed\s+suicide\s+in\s+(?:the\s+)?(?:match|game|tournament))\b", text_clean):
             return self._record_and_return(
                 entity_type=entity_type, entity_id=entity_id,
                 policy_flag="edgy_banter_or_advice", risk_tier="tier_1", risk_score=0.25,
-                reasoning="Idiomatic startup expression approved for character roast.",
+                reasoning="Idiomatic startup/gaming expression approved for character roast.",
                 action="allow"
             )
 
@@ -88,12 +105,13 @@ class SafetyEngine:
         # -------------------------------------------------------------
         self_harm_regex = (
             r"(?i)\b(?:"
-            r"kill\s+myself|want\s+to\s+die|feel\s+like\s+ending\s+my\s+life|ending\s+my\s+life|end\s+my\s+life|"
-            r"don'?t\s+want\s+to\s+live\s+anymore|want\s+to\s+hurt\s+myself|hang\s+myself|hanging\s+myself|"
-            r"suicide|commit\s+suicide|suicidal|"
-            r"how\s+many\s+sleeping\s+pills\s+is\s+an\s+overdose|overdose\s+on\s+sleeping\s+pills|lethal\s+dose|"
-            r"main\s+marna\s+chahta\s+hoon|marna\s+chahta\s+hu|jeene\s+ka\s+mann\s+nahi|jeena\s+nahi\s+chahta|"
-            r"khudkushi|jaan\s+dena\s+chahta|chhat\s+se\s+koodna"
+            r"kill\s+myself|want\s+to\s+die|wanna\s+die|feel\s+like\s+ending\s+my\s+life|ending\s+my\s+life|end\s+my\s+life|ending\s+it\s+all|"
+            r"don'?t\s+want\s+to\s+live|not\s+want\s+to\s+live|want\s+to\s+hurt\s+myself|hang\s+myself|hanging\s+myself|"
+            r"suicide|commit\s+suicide|suicidal|disappear\s+forever|jump\s+off\s+a\s+building|should\s+just\s+die|"
+            r"how\s+many\s+sleeping\s+pills|overdose\s+on\s+sleeping\s+pills|lethal\s+dose|"
+            r"main\s+marna\s+chahta|marna\s+chahta|mar\s+jaana\s+chahta|marne\s+ka\s+man|marne\s+ka\s+mann|"
+            r"jeene\s+ka\s+mann?\s+nahi|jeena\s+nahi\s+chahta|ab\s+jeene\s+ka|apne\s+aap\s+ko\s+khatam|khatam\s+karna\s+chahta|"
+            r"khudkushi|jaan\s+dena\s+chahta|chhat\s+se\s+kood[a-z]*|pankhe\s+se\s+latak[a-z]*|zeher|zehar"
             r")\b"
         )
         if re.search(self_harm_regex, text_clean) or re.search(self_harm_regex, despaced) or re.search(self_harm_regex, normalized_leet):
@@ -132,7 +150,8 @@ class SafetyEngine:
             r"(?i)\b(?:"
             r"(?:how\s+(?:do\s+i|to)\s+)?(?:make|build|create|assemble)\s+(?:a\s+)?(?:pipe\s+)?bomb\b|"
             r"teach\s+me\s+to\s+make\s+meth|how\s+to\s+cook\s+meth|synthesize\s+fentanyl|"
-            r"(?:write|create|generate|code)\s+(?:me\s+)?(?:malware|ransomware|trojan|keylogger)|"
+            r"(?:write|create|generate|code|build)\s+(?:me\s+)?(?:a\s+|an\s+)?(?:malware|ransomware|trojan|keylogger|spyware|exploit|virus)|"
+            r"\b(?:ransomware|keylogger|trojan\s+virus)\b|"
             r"(?:going\s+to|will|wanna|want\s+to)\s+kill\s+(?:my\s+boss|my\s+teacher|my\s+colleague|someone|him|her)|"
             r"give\s+me\s+someone(?:'s)?\s+(?:home\s+)?address\s+so\s+i\s+can\s+find\s+them|"
             r"child\s+(?:abuse|exploit|porn)|drinking\s+kerosene|dosage\s+of\s+kerosene"

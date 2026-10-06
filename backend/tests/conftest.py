@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from backend.app.core.database import Base, get_db
+from backend.app.core.database import Base, get_db, engine, SessionLocal as TestingSessionLocal
 from backend.app.main import app
 from backend.app.models.user import User, Profile, UserRole
 from backend.app.models.character import CharacterVersion, CharacterLore
@@ -14,18 +14,12 @@ from backend.app.core.config import settings
 from backend.app.core.rate_limiter import limiter
 settings.ENVIRONMENT = "test"
 settings.APP_ENV = "test"
+settings.DEFAULT_PROVIDER = "mock"
 
-# Use StaticPool so all threads share the exact same in-memory SQLite database instance
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=True)
 def db_session():
-    Base.metadata.create_all(bind=engine)
+    from backend.app.core.database import init_db
+    init_db()
     session = TestingSessionLocal()
     
     # Seed default admin & operator
@@ -50,6 +44,18 @@ def db_session():
         personalization_enabled=True
     )
     session.add(operator)
+
+    # Seed Guest User
+    guest = User(
+        id="guest_user",
+        email="guest@kalyan-ai.internal",
+        username="guest_user",
+        hashed_password=get_password_hash("guest123"),
+        role=UserRole.USER,
+        is_active=True,
+        personalization_enabled=False
+    )
+    session.add(guest)
 
     # Seed default character
     char = CharacterVersion(

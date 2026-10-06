@@ -1,5 +1,6 @@
 import uuid
 import random
+import threading
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from backend.app.models.content import ContentCandidate, Approval, PublishedAction
 import json
 from backend.app.services.safety_engine import SafetyEngine
+
+_approval_lock = threading.Lock()
 
 SAMPLE_OBSERVATIONS = [
     ("college_job", "observation", "Tech companies spend ₹20 lakhs on office beanbags and arcade machines, but will initiate a disciplinary enquiry if you expense a ₹40 auto ride."),
@@ -88,61 +91,62 @@ class ContentEngine:
         ]
 
     def approve_and_queue(self, candidate_id: str, operator_id: str, final_text: Optional[str] = None) -> Dict[str, Any]:
-        candidate = self.db.query(ContentCandidate).filter(ContentCandidate.id == candidate_id).first()
-        if not candidate:
-            raise ValueError(f"Candidate {candidate_id} not found")
+        with _approval_lock:
+            candidate = self.db.query(ContentCandidate).filter(ContentCandidate.id == candidate_id).first()
+            if not candidate:
+                raise ValueError(f"Candidate {candidate_id} not found")
 
-        # Concurrency race check: prevent duplicate simultaneous approvals
-        if candidate.status in ["approved", "published"]:
-            raise ValueError(f"Candidate {candidate_id} has already been approved or published.")
+            # Concurrency race check: prevent duplicate simultaneous approvals
+            if candidate.status in ["approved", "published"]:
+                raise ValueError(f"Candidate {candidate_id} has already been approved or published.")
 
-        orig_text = candidate.candidate_text
-        if final_text:
-            candidate.candidate_text = final_text
+            orig_text = candidate.candidate_text
+            if final_text:
+                candidate.candidate_text = final_text
 
-        candidate.status = "approved"
+            candidate.status = "approved"
 
-        # 1. Record immutable audit approval record in the same transaction
-        approval = Approval(
-            id=str(uuid.uuid4()),
-            candidate_id=candidate.id,
-            operator_id=operator_id,
-            action="approved",
-            original_text=orig_text,
-            final_text=candidate.candidate_text,
-            reason="Approved for publication via operational console",
-            created_at=datetime.now(timezone.utc)
-        )
-        self.db.add(approval)
+            # 1. Record immutable audit approval record in the same transaction
+            approval = Approval(
+                id=str(uuid.uuid4()),
+                candidate_id=candidate.id,
+                operator_id=operator_id,
+                action="approved",
+                original_text=orig_text,
+                final_text=candidate.candidate_text,
+                reason="Approved for publication via operational console",
+                created_at=datetime.now(timezone.utc)
+            )
+            self.db.add(approval)
 
-        # 2. Outbox Pattern: atomically enqueue durable published_action with idempotency key
-        outbox_entry = PublishedAction(
-            id=f"outbox-{candidate.id}",
-            candidate_id=candidate.id,
-            channel=candidate.source_channel,
-            status="queued",
-            payload_json=json.dumps({
-                "text": candidate.candidate_text,
-                "channel": candidate.source_channel,
-                "pillar": candidate.pillar,
-                "operator_id": operator_id
-            }),
-            retry_count=0,
-            published_at=datetime.now(timezone.utc)
-        )
-        self.db.add(outbox_entry)
-        try:
-            self.db.commit()
-        except IntegrityError:
-            self.db.rollback()
-            raise ValueError(f"Candidate {candidate_id} has already been approved or published.")
+            # 2. Outbox Pattern: atomically enqueue durable published_action with idempotency key
+            outbox_entry = PublishedAction(
+                id=f"outbox-{candidate.id}",
+                candidate_id=candidate.id,
+                channel=candidate.source_channel,
+                status="queued",
+                payload_json=json.dumps({
+                    "text": candidate.candidate_text,
+                    "channel": candidate.source_channel,
+                    "pillar": candidate.pillar,
+                    "operator_id": operator_id
+                }),
+                retry_count=0,
+                published_at=datetime.now(timezone.utc)
+            )
+            self.db.add(outbox_entry)
+            try:
+                self.db.commit()
+            except Exception:
+                self.db.rollback()
+                raise ValueError(f"Candidate {candidate_id} has already been approved or published.")
 
-        return {
-            "candidate_id": candidate.id,
-            "status": "approved",
-            "outbox_id": outbox_entry.id,
-            "text": candidate.candidate_text
-        }
+            return {
+                "candidate_id": candidate.id,
+                "status": "approved",
+                "outbox_id": outbox_entry.id,
+                "text": candidate.candidate_text
+            }
 
     def reject_candidate(self, candidate_id: str, operator_id: str, reason: str = "") -> Dict[str, Any]:
         candidate = self.db.query(ContentCandidate).filter(ContentCandidate.id == candidate_id).first()

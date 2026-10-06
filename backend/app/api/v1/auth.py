@@ -28,28 +28,23 @@ def signup(data: UserSignup, response: Response, db: Session = Depends(get_db)):
             detail="Digital Personal Data Protection (DPDP) Act 2023 consent must be accepted to register."
         )
 
-    # 2. Beta Cohort Capacity Enforcement (N=50 on SQLite)
-    uname = data.username.lower()
-    if uname == "admin" or uname.startswith("admin"):
-        role = UserRole.ADMIN
-    elif uname == "operator" or uname.startswith("operator"):
-        role = UserRole.OPERATOR
-    else:
-        role = UserRole.USER
+    # 2. Assign standard USER role on public signup
+    role = UserRole.USER
 
-    if role == UserRole.USER:
-        # Skip capacity enforcement in test environment
-        if settings.APP_ENV != "test":
-            active_count = db.query(User).filter(User.is_active == True, User.role == UserRole.USER).count()
-            if active_count >= settings.BETA_COHORT_CAP:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Beta cohort is at capacity ({active_count}/{settings.BETA_COHORT_CAP} active users). Please join the waitlist at /api/v1/waitlist to reserve your queue position."
-                )
+    if settings.APP_ENV != "test":
+        active_count = db.query(User).filter(User.is_active == True, User.role == UserRole.USER).count()
+        if active_count >= settings.BETA_COHORT_CAP:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Beta cohort is at capacity ({active_count}/{settings.BETA_COHORT_CAP} active users). Please join the waitlist at /api/v1/waitlist to reserve your queue position."
+            )
 
-    # Check existing email or username
+    # Check existing email or username case-insensitively
+    from sqlalchemy import func
+    clean_email = data.email.lower().strip()
+    clean_username = data.username.strip()
     existing_user = db.query(User).filter(
-        (User.email == data.email) | (User.username == data.username)
+        (func.lower(User.email) == clean_email) | (func.lower(User.username) == clean_username.lower())
     ).first()
     if existing_user:
         raise HTTPException(
@@ -61,8 +56,8 @@ def signup(data: UserSignup, response: Response, db: Session = Depends(get_db)):
 
     new_user = User(
         id=user_id,
-        email=data.email,
-        username=data.username,
+        email=clean_email,
+        username=clean_username,
         hashed_password=get_password_hash(data.password),
         role=role,
         is_active=True,
@@ -117,8 +112,10 @@ def signup(data: UserSignup, response: Response, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
+    from sqlalchemy import func
+    ident = data.email_or_username.lower().strip()
     user = db.query(User).filter(
-        (User.email == data.email_or_username) | (User.username == data.email_or_username)
+        (func.lower(User.email) == ident) | (func.lower(User.username) == ident)
     ).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(

@@ -1,18 +1,35 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 class UserSignup(BaseModel):
     email: EmailStr
-    username: str
-    password: str
+    username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=6)
     display_name: Optional[str] = None
     preferred_language: Optional[str] = "hinglish"
     consent_given: bool = True  # DPDP Act 2023 consent capture
 
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Username cannot be empty or whitespace only")
+        return v.strip()
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return v.lower().strip()
+
 class UserLogin(BaseModel):
-    email_or_username: str
-    password: str
+    email_or_username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
     totp_code: Optional[str] = None
+
+    @field_validator("email_or_username")
+    @classmethod
+    def clean_identifier(cls, v: str) -> str:
+        return v.strip()
 
 class Token(BaseModel):
     access_token: str

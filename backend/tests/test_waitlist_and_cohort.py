@@ -71,13 +71,3 @@ def test_beta_cohort_cap_enforcement_at_signup(monkeypatch):
     assert resp.status_code == 403
     assert "Beta cohort is at capacity" in resp.json()["detail"]
     assert "/api/v1/waitlist" in resp.json()["detail"]
-
-    # Admin/Operator signup should still be allowed to onboard staff
-    resp_admin = client.post("/api/v1/auth/signup", json={
-        "email": f"staff_{tag}@kalyan.ai",
-        "username": f"operator_{tag}",
-        "password": "Password123!",
-        "consent_given": True
-    })
-    # Since username starts with operator, it gets operator role and bypasses cap
-    assert resp_admin.status_code == 200

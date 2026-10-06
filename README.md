@@ -3,7 +3,7 @@
 # ☕ Kalyan — The Brutally Honest Indian Internet Friend
 ### Autonomous AI Character Media Property, Fullstack Operating System & Social Engine
 
-[![Pytest Tests](https://img.shields.io/badge/Pytest-94%2F94%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
+[![Pytest Tests](https://img.shields.io/badge/Pytest-173%2F173%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
 [![Launch Gates](https://img.shields.io/badge/Launch%20Gates-20%2F20%20PASS-blue?style=for-the-badge)](docs/PHASE6_LAUNCH_GATE.md)
 [![LLM](https://img.shields.io/badge/Model-Google%20Gemini%203.5%20Flash--Lite-orange?style=for-the-badge&logo=google)](backend/app/services/model_provider.py)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2015%20%2B%20Redis%207-blueviolet?style=for-the-badge&logo=postgresql)](docker-compose.yml)
@@ -267,7 +267,7 @@ pip install -r backend/requirements.txt
 python backend/scripts/init_postgres_schema.py
 ```
 
-### 4. Run Automated Test Suite (94/94 Green)
+### 4. Run Automated Test Suite (173/173 Green)
 ```bash
 pytest -v
 ```
@@ -298,7 +298,7 @@ AI-Personality_Venture/
 │   │   ├── schemas/         # Pydantic validation schemas
 │   │   └── services/        # Persona, safety, memory, kill switch, social gateways
 │   ├── scripts/             # Automated verification, load testing & DR drills
-│   └── tests/               # 94 comprehensive pytest regression suites
+│   └── tests/               # 173 comprehensive pytest regression & QA suites
 ├── frontend/
 │   ├── src/                 # React 18 SPA components, hooks & state
 │   └── dist/                # Optimized production frontend build

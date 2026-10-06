@@ -74,8 +74,6 @@ def run_backup_restore_drill():
         hasher_source.update(f"{m.id}:{m.user_id}:{m.key}:{m.value}".encode("utf-8"))
     source_memory_hash = hasher_source.hexdigest()
     
-    db.close()
-    
     print(f"[+] Source DB State: Users={count_users}, Memories={count_memories}, Candidates={count_candidates}")
     print(f"[+] Source Memory SHA-256 Checksum: {source_memory_hash[:16]}...")
     
@@ -106,6 +104,8 @@ def run_backup_restore_drill():
             init_conn.execute("INSERT INTO content_candidates VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (c.id, c.source_channel, c.pillar, c.format, c.raw_prompt, c.candidate_text, c.risk_tier, c.status))
         init_conn.commit()
         init_conn.close()
+        
+    db.close()
         
     src_conn = sqlite3.connect(str(source_path))
     dst_conn = sqlite3.connect(str(backup_file))

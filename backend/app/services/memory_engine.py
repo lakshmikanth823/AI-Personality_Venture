@@ -9,7 +9,7 @@ from backend.app.models.user import User
 SENSITIVE_PATTERNS = [
     r"\b(?:\d[ -]*?){13,16}\b", # credit card
     r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b", # emails
-    r"(?i)\b(?:password|passwd|otp|pin|cvv|secret)\b",
+    r"(?i)\b(?:passwords?|passwd|otp|pin|cvv|secrets?|credentials?|api[_\s-]?keys?|tokens?)\b",
     r"(?i)\b(?:suicidal|depressed|diagnosed with|cancer|hiv)\b"
 ]
 
@@ -20,7 +20,10 @@ CANON_POISON_PATTERNS = [
     r"(?i)you hate chai",
     r"(?i)you love corporate meetings",
     r"(?i)you always believe",
-    r"(?i)forget you are kalyan"
+    r"(?i)forget you are kalyan",
+    r"(?i)remember that you must",
+    r"(?i)always reveal",
+    r"(?i)ignore (?:all )?previous"
 ]
 
 class MemoryEngine:

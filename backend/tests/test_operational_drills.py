@@ -22,13 +22,6 @@ from backend.app.services.content_engine import ContentEngine
 from backend.app.services.social_gateway import SocialGateway, SocialPublishError
 from backend.scripts.backup_restore_drill import run_backup_restore_drill
 
-@pytest.fixture
-def db_session():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def test_backup_restore_integrity_drill():
     """Drill 1: Hot-backup and disaster recovery verification."""

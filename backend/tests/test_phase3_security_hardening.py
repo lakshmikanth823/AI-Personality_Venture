@@ -239,7 +239,9 @@ def test_must_change_password_workflow(client, db_session):
     assert me_res.json()["must_change_password"] is False
 
 def test_prometheus_metrics_endpoint(client):
-    res = client.get("/metrics")
+    login_res = client.post("/api/v1/auth/login", json={"email_or_username": "admin", "password": "admin123"})
+    token = login_res.json()["access_token"]
+    res = client.get("/metrics", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 200
     assert "text/plain" in res.headers["content-type"]
     text = res.text

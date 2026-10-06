@@ -1,9 +1,22 @@
+import sys
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.pool import StaticPool
 from backend.app.core.config import settings
 
 # Normalize database URL for synchronous SQLAlchemy engine
 sync_db_url = settings.DATABASE_URL
+is_test = (
+    settings.APP_ENV == "test"
+    or os.environ.get("APP_ENV") == "test"
+    or "pytest" in sys.modules
+    or "PYTEST_CURRENT_TEST" in os.environ
+)
+
+if is_test:
+    sync_db_url = "sqlite://"
+
 if sync_db_url.startswith("postgresql://"):
     sync_db_url = sync_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 elif sync_db_url.startswith("postgresql+asyncpg://"):
@@ -15,6 +28,7 @@ engine_kwargs = {"echo": False}
 if sync_db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
     engine_kwargs["connect_args"] = connect_args
+    engine_kwargs["poolclass"] = StaticPool
 else:
     # PostgreSQL connection pool settings
     engine_kwargs["pool_size"] = 10

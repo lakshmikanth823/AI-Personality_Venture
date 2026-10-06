@@ -1,11 +1,18 @@
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=50000)
     conversation_id: Optional[str] = None
     language_preference: Optional[str] = "hinglish" # "english", "hinglish", "telugu_hinglish"
     channel: Optional[str] = "web"
+
+    @field_validator("message")
+    @classmethod
+    def validate_message(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Message cannot be empty or whitespace only")
+        return v
 
 class ChatResponse(BaseModel):
     conversation_id: str

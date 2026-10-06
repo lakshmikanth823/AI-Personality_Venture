@@ -132,11 +132,13 @@ async def send_message(
     
     if not conversation:
         conv_id = str(uuid.uuid4())
+        msg_title = payload.message.strip()
+        title_text = msg_title[:30] + "..." if len(msg_title) > 30 else msg_title
         conversation = Conversation(
             id=conv_id,
             user_id=user_id if current_user else "guest_user",
             channel=payload.channel or "web",
-            title=payload.message[:30] + "..."
+            title=title_text
         )
         db.add(conversation)
         db.commit()

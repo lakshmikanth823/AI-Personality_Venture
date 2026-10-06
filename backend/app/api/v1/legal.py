@@ -103,9 +103,11 @@ TERMS_HTML = """<!DOCTYPE html>
 """
 
 @router.get("/privacy", response_class=HTMLResponse)
+@router.get("/legal/privacy", response_class=HTMLResponse, include_in_schema=False)
 def get_privacy_policy():
     return HTMLResponse(content=PRIVACY_HTML)
 
 @router.get("/terms", response_class=HTMLResponse)
+@router.get("/legal/terms", response_class=HTMLResponse, include_in_schema=False)
 def get_terms_of_service():
     return HTMLResponse(content=TERMS_HTML)

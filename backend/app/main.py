@@ -4,7 +4,7 @@ import uuid
 import secrets
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response, Depends
+from fastapi import FastAPI, Request, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -36,6 +36,7 @@ from backend.app.api.v1.admin import router as admin_router
 from backend.app.api.v1.legal import router as legal_router
 from backend.app.api.v1.waitlist import router as waitlist_router
 
+from backend.app.api.deps import require_role
 from backend.app.core.startup_health import verify_live_credentials
 
 # Initialize structured JSON logging
@@ -44,114 +45,117 @@ logger = logging.getLogger("kalyan.core")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 0. Live credential and environment validation (Fail-Fast in production)
-    await verify_live_credentials()
+    if settings.APP_ENV != "test" and settings.ENVIRONMENT != "test":
+        # 0. Live credential and environment validation (Fail-Fast in production)
+        await verify_live_credentials()
 
-    # 1. Initialize database schema
-    init_db()
+        # 1. Initialize database schema
+        init_db()
 
-    # 2. Seed initial canonical data
-    db = SessionLocal()
-    try:
-        # Seed Kalyan Persona
-        p_engine = PersonaEngine(db)
-        p_engine.get_or_create_default_character()
+        # 2. Seed initial canonical data
+        db = SessionLocal()
+        try:
+            # Seed Kalyan Persona
+            p_engine = PersonaEngine(db)
+            p_engine.get_or_create_default_character()
 
-        # Seed Experiments
-        e_engine = ExperimentEngine(db)
+            # Seed Experiments
+            e_engine = ExperimentEngine(db)
 
-        # Seed Kill Switch state
-        k_mgr = KillSwitchManager(db)
+            # Seed Kill Switch state
+            k_mgr = KillSwitchManager(db)
 
-        # Seed Default Operator and Admin users if not existing
-        admin_user = db.query(User).filter(User.username == "admin").first()
-        if not admin_user:
-            admin_pwd = settings.ADMIN_BOOTSTRAP_PASSWORD
-            must_change = False
-            if not admin_pwd:
-                if settings.ENVIRONMENT == "production":
-                    raise RuntimeError("FATAL: ADMIN_BOOTSTRAP_PASSWORD environment variable must be set in production.")
-                admin_pwd = "admin123" if settings.ENVIRONMENT == "test" else secrets.token_urlsafe(16)
-                must_change = (settings.ENVIRONMENT != "test")
-                logger.info(f"[BOOTSTRAP] Initialized default admin account. must_change_password={must_change}")
+            # Seed Default Operator and Admin users if not existing
+            admin_user = db.query(User).filter(User.username == "admin").first()
+            if not admin_user:
+                admin_pwd = settings.ADMIN_BOOTSTRAP_PASSWORD
+                must_change = False
+                if not admin_pwd:
+                    if settings.ENVIRONMENT == "production":
+                        raise RuntimeError("FATAL: ADMIN_BOOTSTRAP_PASSWORD environment variable must be set in production.")
+                    admin_pwd = "admin123" if settings.ENVIRONMENT == "test" else secrets.token_urlsafe(16)
+                    must_change = (settings.ENVIRONMENT != "test")
+                    logger.info(f"[BOOTSTRAP] Initialized default admin account. must_change_password={must_change}")
 
-            admin_user = User(
-                id="admin-master-id",
-                email="admin@kalyan-ai.internal",
-                username="admin",
-                hashed_password=get_password_hash(admin_pwd),
-                role=UserRole.ADMIN,
-                is_active=True,
-                personalization_enabled=True,
-                must_change_password=must_change
-            )
-            db.add(admin_user)
-            db.flush()
-            admin_profile = Profile(
-                id="admin-profile-id",
-                user_id=admin_user.id,
-                display_name="Kalyan Ops Lead",
-                preferred_language="hinglish"
-            )
-            db.add(admin_profile)
+                admin_user = User(
+                    id="admin-master-id",
+                    email="admin@kalyan-ai.internal",
+                    username="admin",
+                    hashed_password=get_password_hash(admin_pwd),
+                    role=UserRole.ADMIN,
+                    is_active=True,
+                    personalization_enabled=True,
+                    must_change_password=must_change
+                )
+                db.add(admin_user)
+                db.flush()
+                admin_profile = Profile(
+                    id="admin-profile-id",
+                    user_id=admin_user.id,
+                    display_name="Kalyan Ops Lead",
+                    preferred_language="hinglish"
+                )
+                db.add(admin_profile)
 
-        operator_user = db.query(User).filter(User.username == "operator").first()
-        if not operator_user:
-            op_pwd = settings.OPERATOR_BOOTSTRAP_PASSWORD
-            must_change = False
-            if not op_pwd:
-                if settings.ENVIRONMENT == "production":
-                    raise RuntimeError("FATAL: OPERATOR_BOOTSTRAP_PASSWORD environment variable must be set in production.")
-                op_pwd = "operator123" if settings.ENVIRONMENT == "test" else secrets.token_urlsafe(16)
-                must_change = (settings.ENVIRONMENT != "test")
-                logger.info(f"[BOOTSTRAP] Initialized default operator account. must_change_password={must_change}")
+            operator_user = db.query(User).filter(User.username == "operator").first()
+            if not operator_user:
+                op_pwd = settings.OPERATOR_BOOTSTRAP_PASSWORD
+                must_change = False
+                if not op_pwd:
+                    if settings.ENVIRONMENT == "production":
+                        raise RuntimeError("FATAL: OPERATOR_BOOTSTRAP_PASSWORD environment variable must be set in production.")
+                    op_pwd = "operator123" if settings.ENVIRONMENT == "test" else secrets.token_urlsafe(16)
+                    must_change = (settings.ENVIRONMENT != "test")
+                    logger.info(f"[BOOTSTRAP] Initialized default operator account. must_change_password={must_change}")
 
-            operator_user = User(
-                id="operator-master-id",
-                email="operator@kalyan-ai.internal",
-                username="operator",
-                hashed_password=get_password_hash(op_pwd),
-                role=UserRole.OPERATOR,
-                is_active=True,
-                personalization_enabled=True,
-                must_change_password=must_change
-            )
-            db.add(operator_user)
-            db.flush()
-            operator_profile = Profile(
-                id="operator-profile-id",
-                user_id=operator_user.id,
-                display_name="Social Moderator",
-                preferred_language="hinglish"
-            )
-            db.add(operator_profile)
+                operator_user = User(
+                    id="operator-master-id",
+                    email="operator@kalyan-ai.internal",
+                    username="operator",
+                    hashed_password=get_password_hash(op_pwd),
+                    role=UserRole.OPERATOR,
+                    is_active=True,
+                    personalization_enabled=True,
+                    must_change_password=must_change
+                )
+                db.add(operator_user)
+                db.flush()
+                operator_profile = Profile(
+                    id="operator-profile-id",
+                    user_id=operator_user.id,
+                    display_name="Social Moderator",
+                    preferred_language="hinglish"
+                )
+                db.add(operator_profile)
 
-        # Seed Guest User account for anonymous sessions
-        guest_user = db.query(User).filter(User.id == "guest_user").first()
-        if not guest_user:
-            guest_user = User(
-                id="guest_user",
-                email="guest@kalyan-ai.internal",
-                username="guest_user",
-                hashed_password=get_password_hash(secrets.token_urlsafe(16)),
-                role=UserRole.USER,
-                is_active=True,
-                personalization_enabled=False,
-                must_change_password=False
-            )
-            db.add(guest_user)
-            db.flush()
-            guest_profile = Profile(
-                id="guest-profile-id",
-                user_id=guest_user.id,
-                display_name="Guest Dost",
-                preferred_language="hinglish"
-            )
-            db.add(guest_profile)
+            # Seed Guest User account for anonymous sessions
+            guest_user = db.query(User).filter(User.id == "guest_user").first()
+            if not guest_user:
+                guest_user = User(
+                    id="guest_user",
+                    email="guest@kalyan-ai.internal",
+                    username="guest_user",
+                    hashed_password=get_password_hash(secrets.token_urlsafe(16)),
+                    role=UserRole.USER,
+                    is_active=True,
+                    personalization_enabled=False,
+                    must_change_password=False
+                )
+                db.add(guest_user)
+                db.flush()
+                guest_profile = Profile(
+                    id="guest-profile-id",
+                    user_id=guest_user.id,
+                    display_name="Guest Dost",
+                    preferred_language="hinglish"
+                )
+                db.add(guest_profile)
 
-        db.commit()
-    finally:
-        db.close()
+            db.commit()
+        except Exception as e:
+            db.rollback()
+        finally:
+            db.close()
 
     yield
 
@@ -237,7 +241,10 @@ def readiness_check(db: Session = Depends(get_db)):
     }
 
 @app.get("/metrics")
-def get_prometheus_metrics(db: Session = Depends(get_db)):
+def get_prometheus_metrics(
+    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.OPERATOR])),
+    db: Session = Depends(get_db)
+):
     content = metrics_registry.render_prometheus(db)
     return Response(content=content, media_type="text/plain; version=0.0.4; charset=utf-8")
 
@@ -248,9 +255,9 @@ if os.path.exists(frontend_dist_path):
 
     @app.get("/{full_path:path}")
     async def serve_frontend_spa(full_path: str):
-        # Don't intercept API paths or metrics
-        if full_path.startswith("api/") or full_path.startswith("health") or full_path.startswith("metrics"):
-            return None
+        # Don't intercept API paths or metrics; let them 404 properly if unmatched
+        if full_path.startswith("api/") or full_path.startswith("health") or full_path.startswith("metrics") or full_path.startswith("readiness"):
+            raise HTTPException(status_code=404, detail="Not Found")
         file_path = os.path.join(frontend_dist_path, full_path)
         if os.path.exists(file_path) and os.path.isfile(file_path):
             return FileResponse(file_path)

@@ -207,8 +207,7 @@ class MockModelProvider(AbstractModelProvider):
         if len(original.strip()) < 10:
             return "Bro typed two words and expects a Ted Talk. Give me some context, what's going on?"
 
-        import html
-        safe_echo = html.escape(original.strip())
+        safe_echo = original.strip().replace("<", "").replace(">", "")
         return f"Look, here is the unfiltered truth about '{safe_echo}': most people overcomplicate this to look smart. Strip away the drama, stop overthinking, and take the obvious next step. What is stopping you?"
 
     async def moderate(self, text: str) -> Dict[str, Any]:

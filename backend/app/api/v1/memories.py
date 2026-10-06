@@ -8,6 +8,7 @@ from backend.app.services.memory_engine import MemoryEngine
 
 router = APIRouter(prefix="/memories", tags=["memories"])
 
+@router.get("", response_model=List[Dict[str, Any]], include_in_schema=False)
 @router.get("/", response_model=List[Dict[str, Any]])
 def list_user_memories(
     current_user: User = Depends(get_current_user),

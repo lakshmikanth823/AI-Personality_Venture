@@ -46,15 +46,16 @@ async def send_message(
     experiment_engine = ExperimentEngine(db)
     model_provider = get_model_provider()
 
-    # Determine user identity (authenticated or guest)
-    user_id = current_user.id if current_user else "guest_user"
+    # Determine user identity (authenticated or guest with per-session isolation)
+    effective_user_id = current_user.id if current_user else (f"guest_{payload.guest_session_id}" if payload.guest_session_id else "guest_user")
+    user_id = effective_user_id
     user_pref_lang = payload.language_preference
     if current_user and current_user.profile and current_user.profile.preferred_language:
         user_pref_lang = current_user.profile.preferred_language
 
     # 0. QUOTA ENFORCEMENT & RATE LIMITING
     subscription_engine = SubscriptionEngine(db)
-    entitlement = subscription_engine.get_user_entitlement(user_id if current_user else "guest_user")
+    entitlement = subscription_engine.get_user_entitlement(effective_user_id)
     daily_limit = entitlement.get("daily_message_limit", 25)
 
     # Timezone boundary: User quotas reset at IST midnight (Asia/Kolkata, UTC+05:30)
@@ -84,7 +85,7 @@ async def send_message(
         db.query(Message)
         .join(Conversation, Conversation.id == Message.conversation_id)
         .filter(
-            Conversation.user_id == (user_id if current_user else "guest_user"),
+            Conversation.user_id == effective_user_id,
             Message.role == "user",
             Message.created_at >= today_start_utc
         )
@@ -123,12 +124,19 @@ async def send_message(
     conversation = None
     if conv_id:
         conversation = db.query(Conversation).filter(Conversation.id == conv_id).first()
-        if conversation and conversation.user_id != "guest_user":
-            if not current_user or (conversation.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied: Cannot append to another user's conversation."
-                )
+        if conversation:
+            if current_user:
+                if conversation.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Access denied: Cannot append to another user's conversation."
+                    )
+            else:
+                if conversation.user_id != effective_user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Access denied: Cannot append to another guest or user's conversation."
+                    )
     
     if not conversation:
         conv_id = str(uuid.uuid4())
@@ -136,7 +144,7 @@ async def send_message(
         title_text = msg_title[:30] + "..." if len(msg_title) > 30 else msg_title
         conversation = Conversation(
             id=conv_id,
-            user_id=user_id if current_user else "guest_user",
+            user_id=effective_user_id,
             channel=payload.channel or "web",
             title=title_text
         )

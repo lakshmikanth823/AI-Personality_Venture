@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=50000)
     conversation_id: Optional[str] = None
+    guest_session_id: Optional[str] = None
     language_preference: Optional[str] = "hinglish" # "english", "hinglish", "telugu_hinglish"
     channel: Optional[str] = "web"
 

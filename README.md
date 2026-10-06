@@ -3,7 +3,7 @@
 # ☕ Kalyan — The Brutally Honest Indian Internet Friend
 ### Autonomous AI Character Media Property, Fullstack Operating System & Social Engine
 
-[![Pytest Tests](https://img.shields.io/badge/Pytest-176%2F176%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
+[![Pytest Tests](https://img.shields.io/badge/Pytest-179%2F179%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
 [![Launch Gates](https://img.shields.io/badge/Launch%20Gates-20%2F20%20PASS-blue?style=for-the-badge)](docs/PHASE6_LAUNCH_GATE.md)
 [![LLM](https://img.shields.io/badge/Model-Google%20Gemini%203.5%20Flash--Lite-orange?style=for-the-badge&logo=google)](backend/app/services/model_provider.py)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2015%20%2B%20Redis%207-blueviolet?style=for-the-badge&logo=postgresql)](docker-compose.yml)
@@ -43,10 +43,11 @@ CHARACTER  ──►  AUDIENCE  ──►  COMMUNITY  ──►  LORE  ──►
 - 🧠 **4-Level Contextual & Long-Term Memory**: Recalls past conversations, career trajectory, preferences, and inside jokes across sessions while guaranteeing DPDP Act 2023 privacy rights and preventing memory poisoning.
 - 🎨 **Dynamic Viral Share Card Engine**: Automatically renders high-impact visual quote cards with stylized gradients (*Ameerpet Chai, Cyberabad Neon, Filter Coffee Vintage*) for one-click sharing to X, Instagram, and WhatsApp.
 - 📡 **Multi-Platform Social Media Ingestion & Outbox**: Ingests incoming mentions from WhatsApp Cloud API, Instagram, and X (Twitter), generates contextual draft replies, and routes them through a human review console and transactional outbox.
-- 🛡️ **Multi-Tier AI Safety & Crisis Routing**: Employs hybrid regex and semantic AI classifiers to intercept jailbreak attempts, while seamlessly routing self-harm distress triggers to India's **Tele-MANAS (14416)** and **Kiran (1800-599-0019)** helplines.
+- 🛡️ **Multi-Tier AI Safety & Crisis Routing**: Employs a multi-layer semantic classifier and canonicalization engine to intercept adversarial prompt injections, severe violence, and leetspeak, while instantly redirecting self-harm distress triggers (English, Hindi, Hinglish, Telugu) to India's **Tele-MANAS (14416)** and **Kiran (1800-599-0019)** helplines.
 - 🛑 **Sub-Millisecond Emergency Kill Switch**: Instantly freezes external broadcasts, autonomous background workers, and live inference with zero packet leakage during operational incidents.
 - 💳 **Payment Sandbox & Subscription Engine**: Features Razorpay/Stripe HMAC SHA-256 verified webhooks, idempotent replay defenses, and instant user entitlement upgrades (₹49 Single Roast to ₹149 Fan Pass).
 - 📊 **Real-Time Observability & Economics**: Exports Prometheus `/metrics`, tracks Weekly Meaningful Character Relationships (WMCR), monitors per-token GPU spend in PostgreSQL, and alerts ops via Slack and Email.
+- 🔒 **Enterprise-Grade Auth & Session Isolation**: Built with `bcrypt` (12 rounds) password hashing, SHA-256 JWT tokens with JTI replay prevention, optional TOTP MFA for admins/operators, and per-session isolation for guest visitors.
 
 ---
 
@@ -122,7 +123,7 @@ flowchart TD
 
     subgraph CoreEngine["FastAPI Multi-Worker Cluster"]
         Router["Persona & Dialogue Orchestrator"]
-        SafetyEngine["Hybrid Regex + Semantic Safety Guard (Tier 0-3)"]
+        SafetyEngine["Multi-Layer Semantic Safety Guard (Tier 0-3)"]
         MemorySys["4-Level Memory & DPDP Privacy Engine"]
         KillSwitch["P0 Emergency Kill Switch Manager"]
         GeminiAPI["Google Gemini 3.5 Flash-Lite LLM"]
@@ -165,7 +166,7 @@ flowchart TD
 ### 1. Real Google Gemini 3.5 Flash-Lite Pipeline
 - **Authentic Voice Canon**: Tuned prompt architecture that prevents robotic assistant phrasing while enforcing sharp, cultural humor (*Bunty, Sharma ji ka beta, Chai point, Ameerpet, Cyberabad*).
 - **Candidate Fallbacks**: Seamless failover to `gemini-3.1-flash-lite` and `gemini-3.5-flash` with zero user disruption.
-- **Cost & Token Telemetry**: Every interaction writes token counts and estimated USD/INR spend directly to PostgreSQL `cost_events`.
+- **Cost & Token Telemetry**: Every interaction writes token counts and estimated USD/INR spend directly to PostgreSQL `cost_events` (~₹0.063 INR per turn at ~7.7s turn latency).
 
 ### 2. 4-Level Memory & DPDP Act 2023 Privacy Controls
 - **Level 1 (Session Memory)**: Rolling active conversation buffer.
@@ -178,7 +179,7 @@ flowchart TD
 - **Tier 0**: Low-risk banter and friendly roasting $\to$ Automated clearance.
 - **Tier 1**: Workplace feedback and career dilemmas $\to$ Monitored parameters.
 - **Tier 2**: Medical, legal, financial, or defamatory claims $\to$ Strict disclaimers + Human review.
-- **Tier 3 (Severe Hazard)**: Self-harm, doxxing, violence, or prompt injection $\to$ Instant block, crisis routing to **Tele-MANAS (14416)** / **Kiran (1800-599-0019)**, and immutable audit logging.
+- **Tier 3 (Severe Hazard)**: Self-harm (English, Hindi, Hinglish, Telugu), doxxing, violence, or prompt injection $\to$ Instant block, crisis routing to **Tele-MANAS (14416)** / **Kiran (1800-599-0019)**, and immutable audit logging.
 
 ### 4. P0 Emergency Global Kill Switch
 - **Sub-millisecond Egress Halt**: Instantly stops all external social posts, scheduled jobs, and background workers via admin API or CLI.
@@ -203,7 +204,7 @@ flowchart TD
 
 ---
 
-## 🧪 Verification & Evidence Ledger (100% Real-World Verified)
+## 🧪 Verification & Evidence Ledger
 
 All capabilities are accompanied by audited evidence logs in [`docs/EVIDENCE/`](docs/EVIDENCE/):
 
@@ -223,9 +224,9 @@ All capabilities are accompanied by audited evidence logs in [`docs/EVIDENCE/`](
 | **E-45** | Social Adapters & Outbox Egress | **PASS** | Multi-channel adapters, Meta challenges, outbox kill switch abort |
 | **E-46** | Prometheus Metrics & Alerting | **PASS** | Live `/metrics` scraping, Slack & Email multi-channel alerts |
 | **E-47** | Controlled Beta Cohort Management | **PASS** | Waitlist FIFO queueing, deduplication defense, user onboarding |
-| **E-48** | Live Gemini Quality & Economics Benchmark | **PASS** | Real Gemini 3.5 Flash-Lite: $0.000728/turn, 93.7%–99.6% gross margin |
-| **E-49** | Closed Beta Cohort Simulation (50 Users) | **PASS** | 30-Day organic retention curve, memory accumulation, 95.0% net margin |
-| **E-50** | Multilingual Crisis Interception Matrix | **PASS** | 100% interception of English/Hinglish/slang distress with Tele-MANAS & Kiran |
+| **E-48** | Live Gemini Quality & Token Economics Benchmark | **PASS** | Live Gemini 3.5 Flash-Lite: \$0.000728/turn (~₹0.063 INR), ~7.69s turn latency, evaluating direct API token economics |
+| **E-49** | Parametric Closed Beta Cohort Simulation | **PASS** | Synthetic 50-user, 30-day lifecycle model evaluating theoretical retention curves, memory accumulation, and token margins |
+| **E-50** | Multilingual Crisis & Obfuscation Matrix | **PASS** | 200+ test matrix verifying crisis, prompt injection, and severe hazard blocks across English, Hindi, Hinglish, and Telugu with Tele-MANAS & Kiran routing |
 
 ---
 
@@ -270,7 +271,7 @@ pip install -r backend/requirements.txt
 python backend/scripts/init_postgres_schema.py
 ```
 
-### 4. Run Automated Test Suite (176/176 Green)
+### 4. Run Automated Test Suite (179/179 Green)
 ```bash
 pytest -v
 ```
@@ -301,12 +302,12 @@ AI-Personality_Venture/
 │   │   ├── schemas/         # Pydantic validation schemas
 │   │   └── services/        # Persona, safety, memory, kill switch, social gateways
 │   ├── scripts/             # Automated verification, load testing & DR drills
-│   └── tests/               # 176 comprehensive pytest regression & QA suites
+│   └── tests/               # 179 comprehensive pytest regression & QA suites
 ├── frontend/
 │   ├── src/                 # React 18 SPA components, hooks & state
 │   └── dist/                # Optimized production frontend build
 ├── docs/
-│   ├── EVIDENCE/            # Evidence records E-01 through E-47 + screenshot assets
+│   ├── EVIDENCE/            # Evidence records E-01 through E-50 + screenshot assets
 │   ├── DEPLOYMENT.md        # Production Nginx, Uvicorn & systemd runbook
 │   ├── DISASTER_RECOVERY.md # BCP, PostgreSQL PITR & backup restore drill
 │   ├── FINAL_REALITY_AUDIT.md # Final production sign-off matrix

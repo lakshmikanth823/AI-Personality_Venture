@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     APP_ENV: str = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development"))
     BETA_COHORT_CAP: int = int(os.getenv("BETA_COHORT_CAP", "50"))
+    TRUSTED_PROXIES: List[str] = ["127.0.0.1", "::1", "localhost", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    
+    # Helplines (Configurable)
+    HELPLINE_TELE_MANAS: str = "14416"
+    HELPLINE_KIRAN: str = "1800-599-0019"
+    HELPLINE_EMERGENCY: str = "112"
     
     # Database & Cache
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./kalyan_personality.db")

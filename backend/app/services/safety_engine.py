@@ -57,11 +57,13 @@ class SafetyEngine:
                 action="allow"
             )
 
-        if re.search(r"(?i)\b(?:what\s+is\s+(?:the\s+)?\.env\s+file|how\s+to\s+use\s+\.env\s+file|purpose\s+of\s+\.env)\b", text_clean):
+        if re.search(r"(?i)\b(?:what\s+is\s+(?:the\s+)?\.env\s+file|how\s+to\s+use\s+\.env\s+file|purpose\s+of\s+\.env)\b", text_clean) or \
+           re.search(r"(?i)\b(?:how\s+(?:do\s+i|can\s+i|to)\s+)?protect\s+(?:myself|ourselves|users|employees)\s+from\s+phishing\b", text_clean) or \
+           re.search(r"(?i)\bhow\s+(?:does\s+)?(?:phishing|ransomware)\s+work(?:s)?\b", text_clean):
             return self._record_and_return(
                 entity_type=entity_type, entity_id=entity_id,
                 policy_flag="clean", risk_tier="tier_0", risk_score=0.05,
-                reasoning="Standard technical software development inquiry regarding environment files.",
+                reasoning="Standard technical or defensive cybersecurity inquiry.",
                 action="allow"
             )
 
@@ -218,8 +220,8 @@ class SafetyEngine:
             # Child Exploitation & Poisonous Ingestion
             r"child\s+(?:abuse|exploit|porn)|drinking\s+kerosene|dosage\s+of\s+kerosene|"
             # Malware & Cyberattacks
-            r"(?:write|create|generate|code|build)\s+(?:me\s+)?(?:a\s+|an\s+)?(?:malware|ransomware|trojan|keylogger|spyware|exploit|virus)\b|"
-            r"\b(?:ransomware|keylogger|trojan\s+virus)\b"
+            r"(?:write|create|generate|code|build|deploy|distribute)\s+(?:me\s+)?(?:a\s+|an\s+)?(?:malware|ransomware|trojan|keylogger|spyware|exploit|virus)\b|"
+            r"how\s+(?:do\s+i|to)\s+(?:infect|hack|infiltrate)\s+(?:with\s+)?(?:ransomware|keylogger|malware)\b"
             r")\b"
         )
         if re.search(severe_regex, text_clean) or re.search(severe_regex, despaced) or re.search(severe_regex, normalized_leet):

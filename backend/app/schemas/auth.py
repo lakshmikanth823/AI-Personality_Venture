@@ -1,7 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-COMMON_WEAK_PASSWORDS = {"password", "12345678", "qwerty123", "admin1234", "password123", "letmein123"}
+from backend.app.core.password_policy import validate_password_strength
 
 class UserSignup(BaseModel):
     email: EmailStr
@@ -25,12 +25,10 @@ class UserSignup(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def validate_password_strength(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if v.lower() in COMMON_WEAK_PASSWORDS:
-            raise ValueError("Password is too common or easily guessable")
-        return v
+    def check_password_strength(cls, v: str, info) -> str:
+        username = info.data.get("username") if info and hasattr(info, "data") else None
+        email = info.data.get("email") if info and hasattr(info, "data") else None
+        return validate_password_strength(v, username=username, email=email)
 
 class UserLogin(BaseModel):
     email_or_username: str = Field(..., min_length=1)

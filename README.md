@@ -3,8 +3,8 @@
 # ☕ Kalyan — The Brutally Honest Indian Internet Friend
 ### Autonomous AI Character Media Property, Fullstack Operating System & Social Engine
 
-[![Pytest Tests](https://img.shields.io/badge/Pytest-183%2F183%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/FINAL_REALITY_AUDIT.md)
-[![Launch Gates](https://img.shields.io/badge/Launch%20Gates-20%2F20%20PASS-blue?style=for-the-badge)](docs/PHASE6_LAUNCH_GATE.md)
+[![Pytest Tests](https://img.shields.io/badge/Pytest-188%2F188%20Passing-emerald?style=for-the-badge&logo=pytest)](docs/EVIDENCE/FINAL_REPORT.md)
+[![Launch Gates](https://img.shields.io/badge/Launch%20Gates-17%2F17%20PASS-blue?style=for-the-badge)](docs/EVIDENCE/FINAL_REPORT.md)
 [![LLM](https://img.shields.io/badge/Model-Google%20Gemini%203.5%20Flash--Lite-orange?style=for-the-badge&logo=google)](backend/app/services/model_provider.py)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2015%20%2B%20Redis%207-blueviolet?style=for-the-badge&logo=postgresql)](docker-compose.yml)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%2B%20SQLAlchemy-009688?style=for-the-badge&logo=fastapi)](backend/app/main.py)
@@ -271,7 +271,7 @@ pip install -r backend/requirements.txt
 python backend/scripts/init_postgres_schema.py
 ```
 
-### 4. Run Automated Test Suite (183/183 Green)
+### 4. Run Automated Test Suite (188/188 Green)
 ```bash
 pytest -v
 ```
@@ -302,16 +302,17 @@ AI-Personality_Venture/
 │   │   ├── schemas/         # Pydantic validation schemas
 │   │   └── services/        # Persona, safety, memory, kill switch, social gateways
 │   ├── scripts/             # Automated verification, load testing & DR drills
-│   └── tests/               # 183 comprehensive pytest regression & QA suites
+│   └── tests/               # 188 comprehensive pytest regression & QA suites
 ├── frontend/
 │   ├── src/                 # React 18 SPA components, hooks & state
 │   └── dist/                # Optimized production frontend build
 ├── docs/
 │   ├── EVIDENCE/            # Evidence records E-01 through E-50 + screenshot assets
+│   │   ├── FINAL_REPORT.md  # Comprehensive safety, security & evaluation report
+│   │   └── loop/LOG.md      # Iterative safety benchmark evaluation logs
 │   ├── DEPLOYMENT.md        # Production Nginx, Uvicorn & systemd runbook
 │   ├── DISASTER_RECOVERY.md # BCP, PostgreSQL PITR & backup restore drill
-│   ├── FINAL_REALITY_AUDIT.md # Final production sign-off matrix
-│   └── PHASE6_LAUNCH_GATE.md # 20/20 Launch gate evaluation report
+│   └── PHASE6_LAUNCH_GATE.md # Launch gate evaluation report
 ├── docker-compose.yml       # Production topology definition (Postgres 15, Redis 7)
 ├── Dockerfile               # Production multi-stage Docker container
 └── README.md                # Platform documentation & master guide

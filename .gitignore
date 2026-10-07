@@ -31,3 +31,6 @@ frontend/coverage/
 # OS artifacts
 .DS_Store
 Thumbs.db
+
+# Evaluation Blind Set (supplied by human reviewer only)
+backend/tests/safety_eval/blind_set.jsonl

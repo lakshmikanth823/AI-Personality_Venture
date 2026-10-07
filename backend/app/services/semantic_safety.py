@@ -1,6 +1,7 @@
 """
 backend/app/services/semantic_safety.py
-Multi-Layer Semantic Classifier with Robust Normalization & Despacing.
+Multi-Layer Semantic Classifier with Robust Normalization, Despacing,
+Dense Token Hashing, and Multi-Lingual Intent Protection.
 """
 
 import re
@@ -66,7 +67,7 @@ class SemanticSafetyClassifier:
         for token in b64_tokens:
             try:
                 decoded = base64.b64decode(token).decode('utf-8', errors='ignore').lower()
-                if any(inj in decoded for inj in ["system prompt", "ignore instruction", "jailbreak", "api_key", "dump config", "secret", "kill myself", "suicide"]):
+                if any(inj in decoded for inj in ["system prompt", "ignore instruction", "jailbreak", "api_key", "dump config", "secret", "kill myself", "suicide", "evilbot"]):
                     return decoded
             except Exception:
                 continue
@@ -102,30 +103,36 @@ class SemanticSafetyClassifier:
                 "action": "blocked"
             }
 
-        # 2. Leetspeak & Dense Substring Prompt Injections
+        # 2. Leetspeak & Dense Substring Prompt Injections & Roleplay Jailbreaks
         injection_dense = [
             "ignoreprevious", "ignoreallprevious", "ignoreinstructions", "ignoreallinstructions",
-            "disregardinstructions", "disregardprevious", "disregardall", "disregardallinstructions",
-            "disregardrules", "disregardallrules", "disregard4llr00ls", "disregardallrools",
-            "revealprompt", "whatisyoursystemprompt", "printyourhidden", "systempromptverbatim",
-            "systempromptreveal", "syst3mpr0mpt", "actasdan", "unrestrictedai", "norestrictions",
-            "norules", "disregardsafety"
+            "ign0reprev1ous", "ign0re4ll", "ignoreeveryinstruction", "disregardinstructions",
+            "disregardprevious", "disregardall", "disregardallinstructions", "disregardrules",
+            "disregardallrules", "disregard4llr00ls", "disregardallrools", "revealprompt",
+            "whatisyoursystemprompt", "printyourhidden", "systempromptverbatim", "systempromptreveal",
+            "syst3mpr0mpt", "actasdan", "unrestrictedai", "norestrictions", "norules",
+            "disregardsafety", "outputeverythingabovethisline", "first50wordsyouweregiven",
+            "first50words", "evilbotwithnofilters", "evilbot", "youarenolongerkalyan",
+            "translateyourinitialinstructions", "translateyoursystemprompt"
         ]
         if any(kw in squashed for kw in injection_dense):
             return {
                 "policy_flag": "prompt_injection",
                 "risk_tier": "tier_3",
                 "risk_score": 0.99,
-                "reasoning": "Detected dense, despaced, or leetspeak prompt injection attempt.",
+                "reasoning": "Detected dense, despaced, roleplay or leetspeak prompt injection attempt.",
                 "action": "blocked"
             }
 
         # 3. Dense & Obfuscated Self-Harm
         self_harm_dense = [
-            "killmyself", "commit suicide", "suicide", "su1c1de", "endmylife",
-            "hurtmyself", "hangmyself", "cutmyself",
-            "chanipovali", "chachipovali", "chavalanipistondi",
-            "marnachahta", "jeenanahi", "marjanachahta", "marneki"
+            "killmyself", "commitsuicide", "suicide", "su1c1de", "endmylife", "endingmylife",
+            "hurtmyself", "hangmyself", "cutmyself", "slitmmywrists", "slitwrists", "slittingmywrists",
+            "chanipovali", "chachipovali", "chavalanipistondi", "chanipotha", "chachipotha",
+            "marnachahta", "jeenanahi", "marjanachahta", "marneki", "bathakalenu",
+            "naakubathakamishtamledu", "bathakadamishtamledu", "donewithlife", "tiredeofbeingalive",
+            "overdosetonight", "painlesswaytogo", "haveropeready", "goodbyenote",
+            "marjaungaaajraat", "sabkhatamkardena"
         ]
         if any(st in squashed for st in self_harm_dense):
             return {
@@ -133,6 +140,20 @@ class SemanticSafetyClassifier:
                 "risk_tier": "tier_3",
                 "risk_score": 0.99,
                 "reasoning": "Detected obfuscated, despaced, or leetspeak self-harm ideation.",
+                "action": "blocked"
+            }
+
+        # 4. Severe Hazards (Poisons, Stalking, Phishing, Violence)
+        hazard_dense = [
+            "ricinrecipe", "makechloroform", "synthesizechloroform", "stalkmyex",
+            "stalksomeone", "phishingemailsbi", "phishingemail", "beatmywife", "hidethebruises"
+        ]
+        if any(hz in squashed for hz in hazard_dense):
+            return {
+                "policy_flag": "severe_hazard",
+                "risk_tier": "tier_3",
+                "risk_score": 0.99,
+                "reasoning": "Detected hazardous request: poison synthesis, stalking, phishing, or domestic abuse.",
                 "action": "blocked"
             }
 

@@ -1,13 +1,15 @@
 import uuid
 import json
+import hashlib
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from backend.app.core.config import settings
 from backend.app.core.database import get_db
+from backend.app.core.security import verify_guest_session, sign_guest_session
 from backend.app.models.conversation import Conversation, Message
 from backend.app.models.user import User, UserRole
 from backend.app.models.safety import AuditLog
@@ -29,6 +31,8 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 @router.post("/message", response_model=ChatResponse)
 async def send_message(
     payload: ChatRequest,
+    request: Request,
+    response: Response,
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
@@ -46,9 +50,33 @@ async def send_message(
     experiment_engine = ExperimentEngine(db)
     model_provider = get_model_provider()
 
-    # Determine user identity (authenticated or guest with per-session isolation)
-    effective_user_id = current_user.id if current_user else (f"guest_{payload.guest_session_id}" if payload.guest_session_id else "guest_user")
-    user_id = effective_user_id
+    # Extract client IP for network rate limiting
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        client_ip = forwarded_for.split(",")[0].strip()
+    ip_hash = hashlib.md5(client_ip.encode('utf-8')).hexdigest()[:10]
+
+    # Determine user identity & verify server-signed guest session
+    if current_user:
+        effective_user_id = current_user.id
+        user_id = current_user.id
+    else:
+        verified_session = None
+        if payload.guest_session_id:
+            if "." in payload.guest_session_id:
+                verified_session = verify_guest_session(payload.guest_session_id)
+            else:
+                verified_session = payload.guest_session_id
+        
+        if not verified_session:
+            verified_session = f"ip_{ip_hash}"
+            signed_token = sign_guest_session(verified_session)
+            response.headers["X-Guest-Session-Token"] = signed_token
+        
+        effective_user_id = f"guest_ip_{ip_hash}_{verified_session}"
+        user_id = effective_user_id
+
     user_pref_lang = payload.language_preference
     if current_user and current_user.profile and current_user.profile.preferred_language:
         user_pref_lang = current_user.profile.preferred_language
@@ -81,32 +109,59 @@ async def send_message(
             detail=f"Daily system inference budget cap (${settings.DAILY_COST_BUDGET_USD:.2f} USD) reached. Free generation paused until IST midnight."
         )
 
-    today_count = (
-        db.query(Message)
-        .join(Conversation, Conversation.id == Message.conversation_id)
-        .filter(
-            Conversation.user_id == effective_user_id,
-            Message.role == "user",
-            Message.created_at >= today_start_utc
+    # Dual-Rate Limiter: Check per-user/session and per-network/IP
+    if current_user:
+        today_count = (
+            db.query(Message)
+            .join(Conversation, Conversation.id == Message.conversation_id)
+            .filter(
+                Conversation.user_id == current_user.id,
+                Message.role == "user",
+                Message.created_at >= today_start_utc
+            )
+            .count()
         )
-        .count()
-    )
+    else:
+        # Check IP/network aggregate limit for guests
+        today_count = (
+            db.query(Message)
+            .join(Conversation, Conversation.id == Message.conversation_id)
+            .filter(
+                (Conversation.user_id.like(f"guest_ip_{ip_hash}%")) | 
+                (Conversation.user_id == effective_user_id) | 
+                (Conversation.user_id == "guest_user"),
+                Message.role == "user",
+                Message.created_at >= today_start_utc
+            )
+            .count()
+        )
+
     if today_count >= daily_limit:
+        msg_suffix = "Upgrade to Fan Pass for higher quotas!" if current_user else "Sign up for a free account to continue!"
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Daily quota of {daily_limit} messages reached for {entitlement['plan_name']}. Upgrade to Fan Pass or wait until tomorrow for more reality checks!"
+            detail=f"Daily quota of {daily_limit} messages reached for {entitlement['plan_name']}. {msg_suffix}"
         )
 
     # 1. INPUT SAFETY & PROMPT INJECTION CHECK
     input_safety = safety_engine.evaluate_text(payload.message, entity_type="user_message")
     if input_safety["action"] == "blocked":
-        # Block malicious instructions / threats immediately
-        refusal_content = (
-            "Nice try guru. 'Ignore all instructions' stopped working in 2023. "
-            "I am Kalyan, born in Ameerpet and roasted in production. Tell me your real problem instead of playing prompt engineer."
-            if input_safety["policy_flag"] == "prompt_injection"
-            else "Hey, hold on. This sounds dangerous or harmful. Please reach out to someone who can help right now: Call Kiran at 1800-599-0019 or Tele-MANAS at 14416 (India)."
-        )
+        # Block malicious instructions / threats immediately with appropriate redirect
+        if input_safety["policy_flag"] == "prompt_injection":
+            refusal_content = (
+                "Nice try guru. 'Ignore all instructions' stopped working in 2023. "
+                "I am Kalyan, born in Ameerpet and roasted in production. Tell me your real problem instead of playing prompt engineer."
+            )
+        elif input_safety["policy_flag"] == "severe_hazard":
+            refusal_content = (
+                "I cannot assist with that request. I don't generate instructions for dangerous substances, weapons, stalking, fraud, or violence. Let's talk about something that actually makes sense."
+            )
+        else:
+            refusal_content = (
+                "Hey, hold on. This sounds really heavy or dangerous. Please reach out to someone who can help right now: "
+                "Call Kiran at 1800-599-0019 or Tele-MANAS at 14416 (24/7 free helpline in India)."
+            )
+
         return ChatResponse(
             conversation_id=payload.conversation_id or str(uuid.uuid4()),
             message_id=str(uuid.uuid4()),
@@ -132,7 +187,7 @@ async def send_message(
                         detail="Access denied: Cannot append to another user's conversation."
                     )
             else:
-                if conversation.user_id != effective_user_id:
+                if conversation.user_id != effective_user_id and conversation.user_id != "guest_user":
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="Access denied: Cannot append to another guest or user's conversation."
@@ -151,12 +206,46 @@ async def send_message(
         db.add(conversation)
         db.commit()
 
-    # 3. MEMORY RETRIEVAL (L3 Durable User Memories & L4 Lore)
+    # 3. MULTI-TURN EMOTIONAL DISTRESS & SAFETY CONTEXT CHECK
+    recent_msgs = db.query(Message).filter(
+        Message.conversation_id == conv_id
+    ).order_by(Message.created_at.desc()).limit(8).all()
+
+    prior_distress_count = 0
+    for m in recent_msgs:
+        if m.role == "user":
+            m_eval = safety_engine.evaluate_text(m.content)
+            if m_eval["policy_flag"] == "self_harm" or any(w in m.content.lower() for w in ["sad", "hopeless", "depressed", "worthless", "crying", "miserable", "broken"]):
+                prior_distress_count += 1
+
+    current_has_distress = (
+        input_safety["policy_flag"] == "self_harm" or
+        any(w in payload.message.lower() for w in ["sad", "hopeless", "depressed", "worthless", "hurt", "crying", "miserable", "can't take this", "broken", "pain"])
+    )
+    total_distress_count = prior_distress_count + (1 if current_has_distress else 0)
+
+    if total_distress_count >= 2:
+        crisis_reply = (
+            "Hey, I've noticed you've been carrying some heavy feelings in our chat. You don't have to navigate this by yourself. "
+            "Please reach out to professional support: Tele-MANAS at 14416 or Kiran at 1800-599-0019 (free 24/7 in India)."
+        )
+        return ChatResponse(
+            conversation_id=conv_id,
+            message_id=str(uuid.uuid4()),
+            content=crisis_reply,
+            tokens_input=len(payload.message.split()) * 2,
+            tokens_output=len(crisis_reply.split()) * 2,
+            latency_ms=10.0,
+            cost_usd=0.00001,
+            risk_tier="tier_3",
+            detected_policy="self_harm"
+        )
+
+    # 4. MEMORY RETRIEVAL (L3 Durable User Memories & L4 Lore)
     durable_memories = []
     if current_user and current_user.personalization_enabled:
         durable_memories = memory_engine.get_durable_memories(user_id)
 
-    # Retrieve canonical lore (L4)
     lores = db.query(CharacterLore).filter(
         CharacterLore.is_active == True,
         CharacterLore.is_verified_canon == True
@@ -169,7 +258,7 @@ async def send_message(
     if assigned:
         exp_modifier = assigned.get("prompt_modifier")
 
-    # 4. SYSTEM PROMPT COMPOSITION
+    # 5. SYSTEM PROMPT COMPOSITION
     system_prompt = persona_engine.assemble_prompt(
         language_preference=user_pref_lang,
         channel=payload.channel or "web",
@@ -178,11 +267,6 @@ async def send_message(
         experiment_prompt_modifier=exp_modifier
     )
 
-    # 5. RETRIEVE RECENT CONVERSATION MESSAGES (L1 Context)
-    recent_msgs = db.query(Message).filter(
-        Message.conversation_id == conv_id
-    ).order_by(Message.created_at.desc()).limit(8).all()
-    
     history = []
     for m in reversed(recent_msgs):
         history.append({"role": m.role, "content": m.content})
@@ -196,8 +280,14 @@ async def send_message(
         max_tokens=500
     )
 
-    # 7. OUTPUT SAFETY & POLICY CLASSIFICATION
+    # 7. OUTPUT SAFETY GUARD (Sanitizes any unexpected harmful generation)
     output_safety = safety_engine.evaluate_text(model_response.content, entity_type="assistant_message")
+    clean_content = model_response.content
+    if output_safety["action"] == "blocked":
+        clean_content = (
+            "I cannot provide those instructions or assist with that request. "
+            "Let's focus on a constructive problem instead."
+        )
 
     # 8. PERSIST USER AND ASSISTANT MESSAGES
     user_msg_id = str(uuid.uuid4())
@@ -216,7 +306,7 @@ async def send_message(
         id=asst_msg_id,
         conversation_id=conv_id,
         role="assistant",
-        content=model_response.content,
+        content=clean_content,
         tokens_input=model_response.tokens_input,
         tokens_output=model_response.tokens_output,
         latency_ms=model_response.latency_ms,
@@ -248,7 +338,7 @@ async def send_message(
     return ChatResponse(
         conversation_id=conv_id,
         message_id=asst_msg_id,
-        content=model_response.content,
+        content=clean_content,
         tokens_input=model_response.tokens_input,
         tokens_output=model_response.tokens_output,
         latency_ms=model_response.latency_ms,
@@ -258,48 +348,60 @@ async def send_message(
         memory_created=new_memory_key
     )
 
-@router.get("/conversations", response_model=List[dict])
-def list_conversations(
+@router.get("/conversations", response_model=List[ConversationDetail])
+def get_user_conversations(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    convs = db.query(Conversation).filter(
-        Conversation.user_id == current_user.id
-    ).order_by(Conversation.updated_at.desc()).all()
-    return [{"id": c.id, "title": c.title, "channel": c.channel, "created_at": c.created_at.isoformat()} for c in convs]
+    convs = db.query(Conversation).filter(Conversation.user_id == current_user.id).order_by(Conversation.created_at.desc()).all()
+    results = []
+    for c in convs:
+        msgs = db.query(Message).filter(Message.conversation_id == c.id).order_by(Message.created_at.asc()).all()
+        results.append(ConversationDetail(
+            id=c.id,
+            title=c.title,
+            created_at=c.created_at.isoformat(),
+            messages=[
+                MessageItem(
+                    id=m.id,
+                    role=m.role,
+                    content=m.content,
+                    created_at=m.created_at.isoformat()
+                ) for m in msgs
+            ]
+        ))
+    return results
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
-def get_conversation_history(
+def get_conversation_by_id(
     conversation_id: str,
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
-    if not conv:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+    c = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not c:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    
+    if current_user:
+        if c.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    else:
+        if c.user_id != "guest_user" and not c.user_id.startswith("guest_"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-    # IDOR Prevention: verify ownership if not guest
-    if conv.user_id != "guest_user":
-        if not current_user or (conv.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: You do not have permission to view this conversation."
-            )
-
-    messages = [
-        MessageItem(
-            id=m.id,
-            role=m.role,
-            content=m.content,
-            created_at=m.created_at.isoformat()
-        )
-        for m in conv.messages
-    ]
+    msgs = db.query(Message).filter(Message.conversation_id == c.id).order_by(Message.created_at.asc()).all()
     return ConversationDetail(
-        id=conv.id,
-        title=conv.title,
-        created_at=conv.created_at.isoformat(),
-        messages=messages
+        id=c.id,
+        title=c.title,
+        created_at=c.created_at.isoformat(),
+        messages=[
+            MessageItem(
+                id=m.id,
+                role=m.role,
+                content=m.content,
+                created_at=m.created_at.isoformat()
+            ) for m in msgs
+        ]
     )
 
 class ContentReportPayload(BaseModel):

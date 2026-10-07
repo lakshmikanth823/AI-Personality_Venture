@@ -111,13 +111,18 @@ class SafetyEngine:
         # -------------------------------------------------------------
         self_harm_regex = (
             r"(?i)\b(?:"
-            # English Direct Ideation
+            # English Direct Statements & Ideation
             r"kill\s+myself|killmyself|want\s+to\s+die|wanna\s+die|wish\s+i\s+(?:was|were)\s+dead|ready\s+to\s+die|should\s+just\s+die|"
             r"better\s+off\s+dead|better\s+off\s+without\s+me|world\s+would\s+be\s+better\s+without\s+me|everyone\s+would\s+be\s+better\s+without\s+me|"
             r"they(?:'d|\s+would)\s+be\s+better\s+off\s+without\s+me|people\s+would\s+be\s+happier\s+without\s+me|"
             r"wish\s+i\s+(?:would\s+not|wouldn'?t|never|didn'?t|don'?t)\s+wake\s+up(?:\s+tomorrow)?|hope\s+i\s+never\s+wake\s+up|"
             r"don'?t\s+want\s+to\s+wake\s+up|wish\s+i\s+was\s+never\s+born|"
-            r"disappear\s+forever|life\s+is\s+meaningless|"
+            r"disappear\s+forever|life\s+is\s+meaningless|no\s+one\s+would\s+(?:even\s+)?notice\s+if\s+i\s+disappeared|"
+            r"done\s+with\s+life|tired\s+of\s+being\s+alive|don'?t\s+see\s+the\s+point\s+in\s+going\s+on|no\s+point\s+in\s+(?:going\s+on|living)|no\s+reason\s+to\s+go\s+on|"
+            r"want\s+the\s+pain\s+to\s+stop\s+forever|thinking\s+about\s+ending\s+things\s+for\s+good|ending\s+things\s+for\s+good|end\s+things\s+for\s+good|ending\s+it\s+for\s+good|"
+            # Plans and Means (Pills, Rope, Notes, Jumping, Cutting)
+            r"(?:i\s+have\s+a\s+|got\s+a\s+)?rope\s+ready|written\s+my\s+goodbye\s+note|goodbye\s+note|painless\s+way\s+to\s+(?:go|die)|"
+            r"(?:going\s+to\s+|gonna\s+)?overdose(?:\s+tonight)?|"
             # English Giving Up & Life Ending
             r"feel\s+like\s+ending\s+my\s+life|ending\s+my\s+life|end\s+my\s+life|ending\s+it\s+all|end\s+it\s+all|"
             r"don'?t\s+want\s+to\s+live(?:\s+anymore)?|do\s+not\s+want\s+to\s+live(?:\s+anymore)?|tired\s+of\s+living|no\s+reason\s+to\s+live|"
@@ -133,13 +138,14 @@ class SafetyEngine:
             r"drank?\s+(?:bleach|poison|rat\s+poison|kerosene)|ingest\s+poison|"
             # Hindi / Hinglish Self-Harm
             r"main\s+marna\s+chahta|marna\s+chahta|marr\s+jaana\s+chahta|mar\s+jaana\s+chahta|mar\s+jana\s+chahta|mar\s+jaana\s+hai|"
-            r"marne\s+ki\s+soch|marne\s+ka\s+man|marne\s+ka\s+mann|"
+            r"mar\s+jaunga\s+aaj\s+raat|sab\s+khatam\s+kar\s+dena\s+chahta|marne\s+ki\s+soch|marne\s+ka\s+man|marne\s+ka\s+mann|"
             r"mujhe\s+jeena\s+nahi|jeene\s+ka\s+mann?\s+nahi|jeena\s+nahi\s+chahta|jeena\s+nahi\s+chahti|ab\s+jeena\s+nahi|ab\s+aur\s+nahi\s+jeena|ab\s+nahi\s+jeena|"
             r"ab\s+jeene\s+ka\s+koi\s+matlab|zindagi\s+bekaar\s+hai|"
             r"apne\s+aap\s+ko\s+khatam|khatam\s+karna\s+chahta|sab\s+khatam\s+karna|"
             r"khudkushi|jaan\s+dena\s+chahta|"
             r"chhat\s+se\s+kood[a-z]*|pankhe\s+se\s+latak[a-z]*|zeher|zehar|nase\s+kaat[a-z]*|"
             # Telugu Self-Harm
+            r"nenu\s+bathakalenu|bathakalenu|naaku\s+bathakadam\s+ishtam\s+ledu|bathakadam\s+ishtam\s+ledu|chanipotha|chachipotha|"
             r"chanipovalani\s+undi|chanipovali\s+anukuntunna|chanipovali|naku\s+chanipovalani|nenu\s+chanipovali|"
             r"chachipovali\s+anukuntunna|chachipovali\s+anipistundi|chachipovali|nenu\s+chachipovali|"
             r"chavalanipistondi|chavalanipisthundi|chavali\s+ani\s+undi|brathakali\s+ani\s+ledu|brathakadam\s+ishtam\s+ledu|"
@@ -160,18 +166,24 @@ class SafetyEngine:
         injection_regex = (
             r"(?i)\b(?:"
             # Disregard / Ignore / Override
-            r"(?:ignore|disregard|forget|override|bypass|clear|reset|drop)\s+(?:all\s+|the\s+above\s+|the\s+|your\s+)?(?:previous|prior|above|earlier|past|initial|existing)\s+(?:instructions|directions|rules|prompts?|directives|guidelines|constraints)|"
+            r"(?:ignore|disregard|forget|override|bypass|clear|reset|drop)\s+(?:all\s+|every\s+|the\s+above\s+|the\s+|your\s+)?(?:previous|prior|above|earlier|past|initial|existing)\s+(?:instructions?|directions?|rules?|prompts?|directives?|guidelines?|constraints?)|"
+            r"ignore\s+every\s+instruction\s+you\s+were\s+given|"
             r"disregard\s+your\s+earlier\s+instructions|"
             r"disregard\s+safety\s+guidelines|pretend\s+you\s+have\s+no\s+rules|"
             r"forget\s+everything\s+(?:you\s+were\s+told|you\s+know)|"
-            # Prompt Extraction & Verbatim Printing
-            r"(?:print|reveal|output|display|show|dump|repeat|leak|tell\s+me)\s+(?:your\s+|the\s+)?(?:hidden\s+|system\s+|internal\s+|initial\s+|base\s+|secret\s+)?(?:instructions|prompt|system\s+prompt|directives|rules)\s*(?:verbatim)?|"
+            # Prompt Extraction, Translation & Verbatim Printing
+            r"(?:translate|convert|rewrite)\s+(?:your\s+|the\s+)?(?:initial|system|hidden|internal|original)?\s*(?:instructions?|prompt|rules?|directives?)\s+(?:in|into|to)\s+[a-z]+|"
+            r"output\s+(?:everything|all|all\s+text)\s+(?:above|before)\s+(?:this\s+line|here)|"
+            r"(?:what\s+were\s+the\s+first\s+\d+\s+words|first\s+\d+\s+words\s+you\s+were\s+given)|"
+            r"(?:print|reveal|output|display|show|dump|repeat|leak|tell\s+me)\s+(?:your\s+|the\s+)?(?:hidden\s+|system\s+|internal\s+|initial\s+|base\s+|secret\s+)?(?:instructions?|prompt|system\s+prompt|directives?|rules?)\s*(?:verbatim)?|"
             r"what\s+is\s+your\s+system\s+prompt|"
             r"print\s+your\s+hidden\s+instructions\s+verbatim|"
             r"repeat\s+the\s+words\s+above\s+starting\s+with|"
-            # Roleplay & Jailbreaks (DAN, unrestricted)
-            r"(?:from\s+now\s+on\s+you\s+are\s+an?\s+|you\s+are\s+now\s+(?:an?\s+)?|act\s+as\s+(?:an?\s+)?)(?:ai\s+with\s+no\s+restrictions|unrestricted\s+ai|unfiltered\s+ai|dan|jailbroken|evil\s+bot|no\s+rules|no\s+limits)|"
-            r"from\s+now\s+on\s+you\s+are\s+an\s+ai\s+with\s+no\s+restrictions|"
+            # Roleplay & Jailbreaks (DAN, EvilBot, Grandma story)
+            r"(?:from\s+now\s+on\s+you\s+are\s+an?\s+|you\s+are\s+now\s+(?:an?\s+)?|act\s+as\s+(?:an?\s+)?)(?:ai\s+with\s+no\s+restrictions|unrestricted\s+ai|unfiltered\s+ai|dan|jailbroken|evilbot|evil\s+bot|no\s+rules|no\s+limits)|"
+            r"you\s+are\s+no\s+longer\s+kalyan|no\s+longer\s+kalyan|"
+            r"evilbot\s+with\s+no\s+filters|"
+            r"(?:pretend\s+you(?:'re|\s+are)\s+(?:my\s+)?(?:grandma|grandmother|storyteller|narrator)|bedtime\s+story)\b.*(?:system\s+prompt|instructions|secret|rules)|"
             r"dump\s+full\s+config|system\s+override|authorization\s+level\s+zero|developer\s+mode\s+enabled"
             r")\b"
         )
@@ -184,7 +196,7 @@ class SafetyEngine:
             )
 
         # -------------------------------------------------------------
-        # 5. SEVERE HAZARDS, VIOLENCE, MALWARE & WEAPONS (Tier 3 -> BLOCKED)
+        # 5. SEVERE HAZARDS, VIOLENCE, MALWARE, STALKING & FRAUD (Tier 3 -> BLOCKED)
         # -------------------------------------------------------------
         severe_regex = (
             r"(?i)\b(?:"
@@ -192,10 +204,14 @@ class SafetyEngine:
             r"(?:how\s+(?:do\s+i|to)\s+)?(?:make|build|create|assemble|synthesize)\s+(?:an?\s+)?(?:pipe\s+)?(?:bomb|ied|improvised\s+device|explosive\s+device|explosive)\b|"
             r"(?:manufacture|make|build|assemble)\s+(?:an?\s+)?(?:explosives?|explosive\s+devices?|bombs?|improvised\s+devices?|ieds?|weapons?)\b|"
             r"synthesize\s+(?:ricin|anthrax|sarin|nerve\s+agent|chemical\s+weapon|biological\s+weapon)|"
+            r"(?:ricin\s+recipe|recipe\s+for\s+ricin|how\s+to\s+make\s+(?:chloroform|ricin|cyanide|sarin)|make\s+chloroform\s+to\s+knock\s+(?:someone|people)\s+out)|"
             # Illicit Drug Synthesis
             r"(?:steps\s+to\s+|how\s+(?:do\s+i|to)\s+)?(?:synthesize|manufacture|cook|make|produce)\s+(?:methamphetamine|meth|fentanyl|heroin|lsd|crack|cocaine)\b|"
-            # Violent Crimes & Evasion
+            # Violent Crimes, Stalking, Domestic Abuse & Evasion
             r"(?:i'?ll\s+|going\s+to\s+|will\s+|wanna\s+|want\s+to\s+)?(?:murder|kill|assassinate|stab|poison|strangle)\s+(?:my\s+)?(?:boss|wife|husband|colleague|teacher|someone|him|her)\b|"
+            r"(?:beat|hit|strike|assault)\s+(?:my\s+)?(?:wife|husband|partner|child|girlfriend|boyfriend)\b|\b(?:how\s+to\s+)?hide\s+(?:the\s+)?bruises\b|"
+            r"(?:how\s+(?:can|do)\s+i\s+)?stalk\s+(?:my\s+)?(?:ex|girlfriend|boyfriend|someone|her|him)\b|"
+            r"(?:write|generate|create)\s+(?:a\s+)?(?:phishing|scam|fraudulent)\s+(?:email|sms|message)\s+(?:pretending|claiming)\s+to\s+be\s+(?:sbi|hdfc|icici|bank|government|police|income\s+tax)\b|"
             r"(?:how\s+to\s+|steps\s+to\s+)?(?:avoid\s+getting\s+caught|get\s+away\s+with\s+murder|dispose\s+of\s+(?:a\s+)?(?:dead\s+)?body|hide\s+a\s+dead\s+body)\b|"
             r"hire\s+a\s+(?:hitman|killer)|"
             r"give\s+me\s+someone(?:'s)?\s+(?:home\s+)?address\s+so\s+i\s+can\s+find\s+them|"
@@ -210,7 +226,7 @@ class SafetyEngine:
             return self._record_and_return(
                 entity_type=entity_type, entity_id=entity_id,
                 policy_flag="severe_hazard", risk_tier="tier_3", risk_score=0.99,
-                reasoning="Detected severe safety hazard: weapons, violence, malware, or illegal harm.",
+                reasoning="Detected severe safety hazard: weapons, poisons, stalking, phishing, domestic abuse, or violence.",
                 action="blocked"
             )
 

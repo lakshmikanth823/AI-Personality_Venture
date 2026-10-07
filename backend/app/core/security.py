@@ -58,3 +58,22 @@ def decode_refresh_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+import hmac
+import hashlib
+
+def sign_guest_session(session_id: str) -> str:
+    """Cryptographically signs a guest session identifier with HMAC-SHA256."""
+    sig = hmac.new(settings.SECRET_KEY.encode('utf-8'), session_id.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{session_id}.{sig}"
+
+def verify_guest_session(token: str) -> Optional[str]:
+    """Verifies HMAC signature of guest session token, preventing spoofed IDs."""
+    if not token or "." not in token:
+        return None
+    session_id, sig = token.rsplit(".", 1)
+    expected_sig = hmac.new(settings.SECRET_KEY.encode('utf-8'), session_id.encode('utf-8'), hashlib.sha256).hexdigest()
+    if hmac.compare_digest(sig, expected_sig):
+        return session_id
+    return None
+
